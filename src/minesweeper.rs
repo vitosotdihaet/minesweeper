@@ -1,7 +1,7 @@
 use rand::Rng;
 use std::io;
 
-const BOMB_COUNT: &[&'static str] = &["0️⃣", "1️⃣", "2️⃣", "3️⃣", "4️⃣", "5️⃣", "6️⃣", "7️⃣", "8️⃣"];
+const BOMB_COUNT: &[&'static str] = &["0️", "1️", "2️", "3️", "4️", "5️", "6️", "7️", "8️"];
 
 #[derive(Clone, Copy)]
 pub struct Cell {
@@ -222,7 +222,7 @@ impl Minesweeper {
                 if self.grid[y][x].flag {
                     print!("🚩")
                 } else if self.grid[y][x].revealed == true {
-                    print!("{} ", BOMB_COUNT[self.grid[y][x].surrounds as usize])
+                    print!("{}", BOMB_COUNT[self.grid[y][x].surrounds as usize])
                 } else {
                     print!("🟧")
                 }
