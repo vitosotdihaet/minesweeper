@@ -3,7 +3,6 @@ use std::io;
 
 const BOMB_COUNT: &[&'static str] = &["0️⃣", "1️⃣", "2️⃣", "3️⃣", "4️⃣", "5️⃣", "6️⃣", "7️⃣", "8️⃣"];
 
-
 #[derive(Clone, Copy)]
 pub struct Cell {
     pub surrounds: u8,
@@ -77,7 +76,7 @@ impl Minesweeper {
         match self.grid[y][x].bomb {
             true => {
                 self.grid[y][x].revealed = true;
-                // println!("Epic fail ┻━┻ ︵ヽ(`Д´)ﾉ︵ ┻━┻");
+                println!("Epic fail ┻━┻ ︵ヽ(`Д´)ﾉ︵ ┻━┻");
                 self.playing = false;
             }
             false => {
@@ -88,11 +87,6 @@ impl Minesweeper {
                 }
             }
         }
-    }
-
-    pub fn right_click(&mut self, x: usize, y: usize) {
-        self.grid[y][x].bomb = !self.grid[y][x].bomb;
-        self.grid[y][x].flag = !self.grid[y][x].flag;
     }
 
     fn open_empty(&mut self, x: usize, y: usize) {
@@ -119,6 +113,11 @@ impl Minesweeper {
                 }
             }
         }
+    }
+
+    pub fn right_click(&mut self, x: usize, y: usize) {
+        self.grid[y][x].bomb = !self.grid[y][x].bomb;
+        self.grid[y][x].flag = !self.grid[y][x].flag;
     }
 
     pub fn run(&mut self) {
@@ -174,30 +173,6 @@ impl Minesweeper {
         }
     }
 
-    pub fn print(&self) {
-        print!("#  ");
-        for n in 0..self.width { print!("{} ", n + 1) }
-        println!();
-        
-        for y in 0..self.height {
-            print!(
-                "{}{}|", y + 1,
-                " ".repeat((self.height).to_string().len() - (y + 1).to_string().len())
-            );
-            
-            for x in 0..self.width {
-                if self.grid[y][x].flag {
-                    print!("🚩")
-                } else if self.grid[y][x].revealed == true {
-                    print!("{} ", BOMB_COUNT[self.grid[y][x].surrounds as usize])
-                } else {
-                    print!("🟧")
-                }
-            }
-            println!();
-        }
-    }
-
     pub fn input_starting_info(&self) -> Minesweeper {
         // width & height input
         println!("Input width and height of Minesweeper grid: ");
@@ -231,4 +206,29 @@ impl Minesweeper {
     
         Minesweeper::new(width, height, number_of_mines)
     }
+
+    pub fn print(&self) {
+        print!("#  ");
+        for n in 0..self.width { print!("{} ", n + 1) }
+        println!();
+        
+        for y in 0..self.height {
+            print!(
+                "{}{}|", y + 1,
+                " ".repeat((self.height).to_string().len() - (y + 1).to_string().len())
+            );
+            
+            for x in 0..self.width {
+                if self.grid[y][x].flag {
+                    print!("🚩")
+                } else if self.grid[y][x].revealed == true {
+                    print!("{} ", BOMB_COUNT[self.grid[y][x].surrounds as usize])
+                } else {
+                    print!("🟧")
+                }
+            }
+            println!();
+        }
+    }
+
 }
