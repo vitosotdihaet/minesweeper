@@ -1,5 +1,5 @@
 use rand::Rng;
-use std::io;
+use std::{io, cmp::max};
 
 const BOMB_COUNT: &[&'static str] = &["0️", "1️", "2️", "3️", "4️", "5️", "6️", "7️", "8️"];
 
@@ -208,14 +208,21 @@ impl Minesweeper {
     }
 
     pub fn print(&self) {
-        print!("#{}", " ".repeat((self.height).to_string().len() - ((self.width).to_string().len() - 1)));
-        for n in 0..self.width { print!("{} {}", " ".repeat((self.width).to_string().len() - (n + 1).to_string().len()), n + 1); }
         println!();
+        let w_length = self.width.to_string().len();
+        let h_length = self.height.to_string().len();
+
+        let mut to_print = "#".to_owned() + &" ".repeat(max(0, h_length as isize - w_length as isize + 1) as usize);
+        for n in 0..self.width { 
+            to_print += &((" ".repeat(w_length - (n + 1).to_string().len() + 1) + &(n + 1).to_string()));
+        }
+        println!("{}", to_print);
+        println!("{}{}", " ".repeat(h_length + 1), "_".repeat(to_print.len() - h_length - 1));
         
         for y in 0..self.height {
             print!(
                 "{}{}|", y + 1,
-                " ".repeat((self.height).to_string().len() - (y + 1).to_string().len())
+                " ".repeat(h_length - (y + 1).to_string().len() + 1)
             );
             
             for x in 0..self.width {
@@ -224,12 +231,14 @@ impl Minesweeper {
                 } else if self.grid[y][x].revealed == true {
                     print!("{}", BOMB_COUNT[self.grid[y][x].surrounds as usize])
                 } else {
-                    print!("🟧")
+                    print!("?")
                 }
-                print!("{}", " ".repeat((self.width).to_string().len() - 1))
+                print!("{}", " ".repeat(w_length))
             }
             println!();
         }
+
+        println!();
     }
 
 }
