@@ -208,8 +208,8 @@ impl Minesweeper {
     }
 
     pub fn print(&self) {
-        print!("#  ");
-        for n in 0..self.width { print!("{} ", n + 1) }
+        print!("#{}", " ".repeat((self.height).to_string().len() - ((self.width).to_string().len() - 1)));
+        for n in 0..self.width { print!("{} {}", " ".repeat((self.width).to_string().len() - (n + 1).to_string().len()), n + 1); }
         println!();
         
         for y in 0..self.height {
@@ -226,6 +226,7 @@ impl Minesweeper {
                 } else {
                     print!("🟧")
                 }
+                print!("{}", " ".repeat((self.width).to_string().len() - 1))
             }
             println!();
         }
