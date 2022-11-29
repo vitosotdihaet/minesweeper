@@ -139,7 +139,7 @@ impl Minesweeper {
             return;
         }
 
-        println!("Left or Right click? (L for left, R for right): ");
+        println!("Left or Right click? (l/r): ");
         let mut input_str = String::new();
         io::stdin()
             .read_line(&mut input_str)
@@ -167,7 +167,7 @@ impl Minesweeper {
 
         let x = next_number() - 1;
         let y = next_number() - 1;
-        if click == "L" {
+        if click == "L" || click == "l" {
             self.left_click(x, y)
         } else {
             self.right_click(x, y)
@@ -191,7 +191,7 @@ impl Minesweeper {
                 } else if self.grid[y][x].revealed == true {
                     print!("{} ", BOMB_COUNT[self.grid[y][x].surrounds as usize])
                 } else {
-                    print!("😊")
+                    print!("🟧")
                 }
             }
             println!();
