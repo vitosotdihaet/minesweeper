@@ -72,7 +72,7 @@ impl Minesweeper {
         Minesweeper {playing, grid, width, height}
     }
 
-    pub fn left_click(&mut self, x: usize, y: usize) {
+    pub fn open(&mut self, x: usize, y: usize) {
         match self.grid[y][x].bomb {
             true => {
                 self.grid[y][x].revealed = true;
@@ -115,7 +115,7 @@ impl Minesweeper {
         }
     }
 
-    pub fn right_click(&mut self, x: usize, y: usize) {
+    fn flag(&mut self, x: usize, y: usize) {
         self.grid[y][x].bomb = !self.grid[y][x].bomb;
         self.grid[y][x].flag = !self.grid[y][x].flag;
     }
@@ -138,6 +138,10 @@ impl Minesweeper {
             return;
         }
 
+        self.input_a_turn();
+    }
+
+    pub fn input_a_turn(&mut self) {
         println!("Left or Right click? (l/r): ");
         let mut input_str = String::new();
         io::stdin()
@@ -145,10 +149,6 @@ impl Minesweeper {
             .expect("Error reading line");
         let click: &str = input_str.trim();
 
-        self.make_a_turn(click);
-    }
-
-    fn make_a_turn(&mut self, click: &str) {
         println!("Input x and y: ");
         let mut input_str = String::new();
         io::stdin()
@@ -167,9 +167,9 @@ impl Minesweeper {
         let x = next_number() - 1;
         let y = next_number() - 1;
         if click == "L" || click == "l" {
-            self.left_click(x, y)
+            self.open(x, y)
         } else {
-            self.right_click(x, y)
+            self.flag(x, y)
         }
     }
 
@@ -228,7 +228,7 @@ impl Minesweeper {
             for x in 0..self.width {
                 if self.grid[y][x].flag {
                     print!("🚩")
-                } else if self.grid[y][x].revealed == true {
+                } else if self.grid[y][x].revealed {
                     print!("{}", BOMB_COUNT[self.grid[y][x].surrounds as usize])
                 } else {
                     print!("?")
