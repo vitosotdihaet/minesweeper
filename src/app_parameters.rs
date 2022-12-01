@@ -113,7 +113,7 @@ pub fn init_ms(
     // while !chosen {
         *ms_info = MSInfo {
             width: 15,
-            height: 10,
+            height: 15,
             bombs: 10
         };
         c.insert_resource(*ms_info);
@@ -185,17 +185,16 @@ pub fn run_ms(
                     ),
                 ..Default::default()
             };
-            // println!("{} {}", tx, ty);
+
             *p = trans;
             let collision_trans = Transform {
                 translation: Vec3::new(
-                    tx + size/2. + window.width()/2.,
-                    ty + size/2. + window.height()/2.,
+                    tx + window.width()/2.,
+                    ty + window.height()/2.,
                     0.0
                     ),
                 ..Default::default()
             };
-            println!("{} {}", tx - size/2. + window.width()/2., ty - size/2. + window.height()/2.);
 
             if let Some(_c) = collide(
                 collision_trans.translation,
@@ -206,24 +205,16 @@ pub fn run_ms(
                 let off_x = window.width() as f32 - size;
                 let off_y = window.height() as f32 - size;
 
-                let gx = ((mx + off_x) / (window.width()) * (ms.width as f32)) as usize;
-                let gy = ((my + off_y) / (window.height()) * (ms.height as f32)) as usize;
+                let gx = ((mx + size/2.) / off_x * (ms.width as f32)) as isize - 1;
+                let gy = ((my + size/2.) / off_y * (ms.height as f32)) as isize - 1;
                 
-                println!("damn... {:?} at {} {}", _c, gx, gy);
-                if gx < ms.width && gy < ms.height {
-                    ms.open(gx, gy);
+                // println!("damn... {:?} at {} {}", _c, gx, gy);
+                if (gx as usize) < ms.width && (gy as usize) < ms.height {
+                    ms.open(gx as usize, gy as usize);
                 }
             }
 
-            // let anchor = Anchor::from(Anchor::Custom(Vec2::new(
-            //     grid_max * 0.5 - x as f32 - 0.5,
-            //     grid_max * 0.5 - y as f32 - 0.5
-            // )));
-            
-            // s.anchor = anchor;
             s.custom_size = size_vec;
-
-            // let s_pos = transforms.get_mut().unwrap();
 
             if ms.grid[y][x].flag {
                 s.color = Color::rgb(
