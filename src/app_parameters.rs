@@ -1,9 +1,24 @@
-pub use bevy::{input::system::exit_on_esc_system, prelude::*};
-use std::{path::Path, cmp::min};
+use bevy::sprite::collide_aabb::collide;
+pub use bevy::{window::close_on_esc, prelude::*};
+use std::{path::Path, cmp::{min, max}, f32::consts::PI};
 
 use crate::minesweeper::*;
 
 const INTRO_FONT_SIZE: f32 = 60.0;
+// const IMGS_PATH: &Path = Path::new("imgs");
+
+#[derive(Resource, Clone, Copy, Default)]
+pub struct MSInfo {
+    width: usize,
+    height: usize,
+    bombs: usize
+}
+
+// impl Default for MSInfo {
+//     fn default() -> Self {
+//         MSInfo { width: 10, height: 10, bombs: 10 }
+//     }
+// }
 
 #[derive(Component)]
 pub struct MS;
@@ -11,17 +26,18 @@ pub struct MS;
 #[derive(Clone, PartialEq, Eq, Debug, Hash)]
 pub enum GameState {
     Intro,
-    Playing
+    Playing,
+    Endgame
 }
 
+#[derive(Resource)]
 pub struct GameRes {
     font_m: Handle<Font>,
     // sprites: Vec<SpriteBundle>
 }
 
 pub fn startup(mut c: Commands, a: Res<AssetServer>) {
-    c.spawn_bundle(UiCameraBundle::default());
-    c.spawn_bundle(OrthographicCameraBundle::new_2d());
+    c.spawn(Camera2dBundle::default());
     
     // let mut sp = vec![];
     // let mut names = vec![];
@@ -59,7 +75,7 @@ pub fn intro(
     *frame_count += 1;
 
     if *frame_count == 1 {
-        c.spawn_bundle(Text2dBundle {
+        c.spawn(Text2dBundle {
             text: Text {
                 sections: vec![TextSection {
                     value: "Minesweeper!".to_owned(),
@@ -86,77 +102,161 @@ pub fn intro(
     }
 }
 
-pub fn init_ms(mut ms: Local<Minesweeper>) {
-    *ms = Minesweeper::new(10, 10, 10);
+pub fn init_ms(
+    mut c: Commands, 
+    // mut cursor_moved_event_reader: EventReader<CursorMoved>,
+    // mut cursor_position: Local<Vec2>,
+    mut ms_info: ResMut<MSInfo>,
+    a: Res<AssetServer>
+) {
+    // let mut chosen: bool = true;
+    // while !chosen {
+        *ms_info = MSInfo {
+            width: 15,
+            height: 10,
+            bombs: 10
+        };
+        c.insert_resource(*ms_info);
+    // }
+    for _ in 0..ms_info.width * ms_info.height {
+        c.spawn(SpriteBundle {
+            texture: a.load(Path::new("imgs").join("cell.png")),
+            sprite: Sprite {
+                color: Color::Rgba{red: 1., green: 1., blue: 1., alpha: 1.},
+                custom_size: Some(Vec2::new(1., 1.)),
+                ..Default::default()
+            },
+            ..Default::default()
+        })
+        .insert(MS);
+    }
 }
 
 pub fn run_ms(
-    time: Res<Time>,
+    // time: Res<Time>,
+    mut second_frame: Local<bool>,
     mouse_button_input: Res<Input<MouseButton>>,
+    ms_info: Res<MSInfo>,
     mut windows: ResMut<Windows>,
-    mut cursor_moved_event_reader: EventReader<CursorMoved>,
+    mut cursor_moved: EventReader<CursorMoved>,
     mut cursor_position: Local<Vec2>,
     mut ms: Local<Minesweeper>,
-    mut sprites: Query<&mut Sprite, With<MS>>,
-    mut c: Commands,
-    a: Res<AssetServer>,
-    gr: Res<GameRes>
+    mut sprites: Query<(&mut Sprite, &mut Transform, &Handle<Image>), With<MS>>,
     ) {
+        if !*second_frame {
+            *ms = Minesweeper::new(ms_info.width, ms_info.height, ms_info.bombs);
+            *second_frame = true;
+        }
+
         let window = windows.get_primary_mut().unwrap();
+        let grid_max = max(ms.width, ms.height) as f32;
         let grid_min = min(ms.width, ms.height) as f32;
         let wind_min = f32::min(window.width(), window.height());
-        let size = Some(Vec2::new(wind_min / (grid_min + 1.), wind_min / (grid_min + 1.)));
+        let size = wind_min / (grid_min + 1.);
+        let size_vec = Some(Vec2::new(
+            size,
+            size
+        ));
 
-        for y in 0..ms.height {
-            for x in 0..ms.width {
-                let pivot = Transform::from_translation(Vec3::new(
-                    window.width()  / (grid_min + 1.) * (x as f32 + 1.) - window.width() /2.,
-                    window.height() / (grid_min + 1.) * (y as f32 + 1.) - window.height()/2.,
-                    0.,
-                ));
+        let mut mx: f32 = -10000.;
+        let mut my: f32 = -10000.;
 
-                if ms.grid[y][x].flag {
-                    c.spawn_bundle(SpriteBundle {
-                        texture: a.load(Path::new("imgs").join("flag.png")),
-                        transform: pivot,
-                        sprite: Sprite { custom_size: size, ..Default::default() },
-                        ..Default::default()
-                    });
-                } else if ms.grid[y][x].revealed {
-                    if ms.grid[y][x].bomb {
-                        c.spawn_bundle(SpriteBundle {
-                            texture: a.load(Path::new("imgs").join("bomb.png")),
-                            transform: pivot,
-                            sprite: Sprite { custom_size: size, ..Default::default() },
-                            ..Default::default()
-                        });
-                    } else {
-                        if ms.grid[y][x].surrounds != 0 {
-                            c.spawn_bundle(SpriteBundle {
-                                texture: a.load(Path::new("imgs").join(ms.grid[y][x].surrounds.to_string() + ".png")),
-                                transform: pivot,
-                                sprite: Sprite { custom_size: size, ..Default::default() },
-                                ..Default::default()
-                            });
-                        } else {
-                            c.spawn_bundle(SpriteBundle {
-                                texture: a.load(Path::new("imgs").join("over_cell.png")),
-                                transform: pivot,
-                                sprite: Sprite { custom_size: size, ..Default::default() },
-                                ..Default::default()
-                            });
-                        }
-                    }
-                } else {
-                    c.spawn_bundle(SpriteBundle {
-                        texture: a.load(Path::new("imgs").join("cell.png")),
-                        transform: pivot,
-                        sprite: Sprite { custom_size: size, ..Default::default() },
-                        ..Default::default()
-                    });
-                }
+        if let Some(moved_cursor) = cursor_moved.iter().last() {
+            *cursor_position = moved_cursor.position;
+        }
+        if mouse_button_input.just_released(MouseButton::Left) {
+            mx = cursor_position.x;
+            my = cursor_position.y;
+        }
 
+        let mut ind = 0;
+        for (mut s, mut p, mut i) in sprites.iter_mut() {
+            let x = ind % ms.width;
+            let y = ind / ms.width;
+
+            let tx = size/2. + (x as f32 - ms.width as f32  / 2.) * size;
+            let ty = size/2. + (y as f32 - ms.height as f32 / 2.) * size;
+
+            let trans = Transform {
+                translation: Vec3::new(
+                    tx,
+                    ty,
+                    0.0
+                    ),
+                ..Default::default()
+            };
+            // println!("{} {}", tx, ty);
+            *p = trans;
+            let collision_trans = Transform {
+                translation: Vec3::new(
+                    tx + size/2. + window.width()/2.,
+                    ty + size/2. + window.height()/2.,
+                    0.0
+                    ),
+                ..Default::default()
+            };
+            println!("{} {}", tx - size/2. + window.width()/2., ty - size/2. + window.height()/2.);
+
+            if let Some(_c) = collide(
+                collision_trans.translation,
+                size_vec.unwrap(),
+                Vec3::new(mx, my, 0.),
+                Vec2::new(1.0, 1.0)
+            ) {
+                let off_x = window.width() as f32 - size;
+                let off_y = window.height() as f32 - size;
+
+                let gx = ((mx + off_x) / (window.width()) * (ms.width as f32)) as usize;
+                let gy = ((my + off_y) / (window.height()) * (ms.height as f32)) as usize;
                 
+                println!("damn... {:?} at {} {}", _c, gx, gy);
+                if gx < ms.width && gy < ms.height {
+                    ms.open(gx, gy);
+                }
             }
+
+            // let anchor = Anchor::from(Anchor::Custom(Vec2::new(
+            //     grid_max * 0.5 - x as f32 - 0.5,
+            //     grid_max * 0.5 - y as f32 - 0.5
+            // )));
+            
+            // s.anchor = anchor;
+            s.custom_size = size_vec;
+
+            // let s_pos = transforms.get_mut().unwrap();
+
+            if ms.grid[y][x].flag {
+                s.color = Color::rgb(
+                    1.0,
+                    0.1,
+                    0.1
+                )
+            } else if ms.grid[y][x].revealed {
+                if ms.grid[y][x].bomb {
+                    s.color = Color::rgb(
+                        0.1,
+                        0.1,
+                        0.1
+                    )
+                } else {
+                    let surr = ms.grid[y][x].surrounds; 
+                    if surr != 0 {
+                        s.color = Color::rgb(
+                            (surr as f32 * PI / 8.).sin(),
+                            0.3,
+                            (surr as f32 * PI / 8.).cos()
+                        )
+                    } else {
+                        s.color = Color::rgb(
+                            0.3,
+                            0.3,
+                            0.3
+                        )
+                    }
+                }
+            } else {
+
+            }
+            ind += 1;
         }
 }

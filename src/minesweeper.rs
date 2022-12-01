@@ -76,7 +76,6 @@ impl Minesweeper {
         match self.grid[y][x].bomb {
             true => {
                 self.grid[y][x].revealed = true;
-                println!("Epic fail ┻━┻ ︵ヽ(`Д´)ﾉ︵ ┻━┻");
                 self.playing = false;
             }
             false => {
@@ -133,7 +132,6 @@ impl Minesweeper {
         }
 
         if end {
-            println!("ヾ(≧▽≦*)o");
             self.playing = false;
             return;
         }
