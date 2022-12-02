@@ -1,6 +1,7 @@
-use bevy::sprite::collide_aabb::collide;
 pub use bevy::{window::close_on_esc, prelude::*};
-use std::{path::Path, cmp::{min, max}, f32::consts::PI};
+
+use bevy::sprite::collide_aabb::collide;
+use std::{path::Path, cmp::{min, max}};
 
 use crate::minesweeper::*;
 
