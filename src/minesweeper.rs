@@ -88,6 +88,11 @@ impl Minesweeper {
         }
     }
 
+    pub fn flag(&mut self, x: usize, y: usize) {
+        self.grid[y][x].bomb = !self.grid[y][x].bomb;
+        self.grid[y][x].flag = !self.grid[y][x].flag;
+    }
+
     fn open_empty(&mut self, x: usize, y: usize) {
         if self.grid[y][x].revealed == true {
             return;
@@ -112,11 +117,6 @@ impl Minesweeper {
                 }
             }
         }
-    }
-
-    fn flag(&mut self, x: usize, y: usize) {
-        self.grid[y][x].bomb = !self.grid[y][x].bomb;
-        self.grid[y][x].flag = !self.grid[y][x].flag;
     }
 
     pub fn run(&mut self) {
