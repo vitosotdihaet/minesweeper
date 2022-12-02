@@ -15,12 +15,6 @@ pub struct MSInfo {
     bombs: usize
 }
 
-// impl Default for MSInfo {
-//     fn default() -> Self {
-//         MSInfo { width: 10, height: 10, bombs: 10 }
-//     }
-// }
-
 #[derive(Component)]
 pub struct MS;
 
@@ -39,26 +33,6 @@ pub struct GameRes {
 
 pub fn startup(mut c: Commands, a: Res<AssetServer>) {
     c.spawn(Camera2dBundle::default());
-    
-    // let mut sp = vec![];
-    // let mut names = vec![];
-    // for i in 1..=8 {
-    //     names.push(i.to_string());
-    // }
-
-    // names.extend(vec![
-    //     "bomb.png".to_owned(),
-    //     "cell.png".to_owned(),
-    //     "flag.png".to_owned(),
-    //     "over_cell.png".to_owned()
-    // ]);
-
-    // for e in names {
-    //     sp.push(SpriteBundle {
-    //         texture: a.load(Path::new("imgs").join(e)),
-    //         ..Default::default()
-    //     } );
-    // }
 
     c.insert_resource(GameRes {
         font_m: a.load(Path::new("fonts").join("Nunito-Regular.ttf")),
@@ -204,46 +178,28 @@ pub fn run_ms(
                 Vec2::new(1.0, 1.0)
             ) {
                 // println!("damn... {:?} at {} {}", _c, x, y);
-                ms.open(x, y);
+                if left_click {
+                    ms.open(x, y);
+                } else {
+                    ms.flag(x, y);
+                }
             }
 
             s.custom_size = size_vec;
 
             if ms.grid[y][x].flag {
-                // s.color = Color::rgb(
-                //     1.0,
-                //     0.1,
-                //     0.1
-                // )
                 *i = a.load(Path::new("img").join("flag.png"));
             } else if ms.grid[y][x].revealed {
                 if ms.grid[y][x].bomb {
-                    // s.color = Color::rgb(
-                    //     0.1,
-                    //     0.1,
-                    //     0.1
-                    // )
                     *i = a.load(Path::new("img").join("bomb.png"));
                 } else {
                     let surr = ms.grid[y][x].surrounds; 
                     if surr != 0 {
-                        // s.color = Color::rgb(
-                        //     (surr as f32 * PI / 8.).sin(),
-                        //     0.3,
-                        //     (surr as f32 * PI / 8.).cos()
-                        // )
                         *i = a.load(Path::new("img").join(surr.to_string() + ".png"));
                     } else {
-                        // s.color = Color::rgb(
-                        //     0.3,
-                        //     0.3,
-                        //     0.3
-                        // )
                         *i = a.load(Path::new("img").join("open_cell.png"));
                     }
                 }
-            } else {
-
             }
             ind += 1;
         }
