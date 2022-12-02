@@ -61,7 +61,6 @@ pub fn startup(mut c: Commands, a: Res<AssetServer>) {
 
     c.insert_resource(GameRes {
         font_m: a.load(Path::new("fonts").join("Nunito-Regular.ttf")),
-        // sprites: sp
     });
 }
 
@@ -113,14 +112,14 @@ pub fn init_ms(
     // while !chosen {
         *ms_info = MSInfo {
             width: 15,
-            height: 15,
+            height: 10,
             bombs: 10
         };
         c.insert_resource(*ms_info);
     // }
     for _ in 0..ms_info.width * ms_info.height {
         c.spawn(SpriteBundle {
-            texture: a.load(Path::new("imgs").join("cell.png")),
+            texture: a.load(Path::new("img").join("cell.png")),
             sprite: Sprite {
                 color: Color::Rgba{red: 1., green: 1., blue: 1., alpha: 1.},
                 custom_size: Some(Vec2::new(1., 1.)),
@@ -141,7 +140,8 @@ pub fn run_ms(
     mut cursor_moved: EventReader<CursorMoved>,
     mut cursor_position: Local<Vec2>,
     mut ms: Local<Minesweeper>,
-    mut sprites: Query<(&mut Sprite, &mut Transform, &Handle<Image>), With<MS>>,
+    mut sprites: Query<(&mut Sprite, &mut Transform, &mut Handle<Image>), With<MS>>,
+    a: Res<AssetServer>
     ) {
         if !*second_frame {
             *ms = Minesweeper::new(ms_info.width, ms_info.height, ms_info.bombs);
@@ -152,14 +152,14 @@ pub fn run_ms(
         let grid_max = max(ms.width, ms.height) as f32;
         let grid_min = min(ms.width, ms.height) as f32;
         let wind_min = f32::min(window.width(), window.height());
-        let size = wind_min / (grid_min + 1.);
+        let size = wind_min / (grid_max + 1.);
         let size_vec = Some(Vec2::new(
             size,
             size
         ));
 
-        let mut mx: f32 = -10000.;
-        let mut my: f32 = -10000.;
+        let mut mx: f32 = -1.;
+        let mut my: f32 = -1.;
 
         if let Some(moved_cursor) = cursor_moved.iter().last() {
             *cursor_position = moved_cursor.position;
@@ -202,47 +202,43 @@ pub fn run_ms(
                 Vec3::new(mx, my, 0.),
                 Vec2::new(1.0, 1.0)
             ) {
-                let off_x = window.width() as f32 - size;
-                let off_y = window.height() as f32 - size;
-
-                let gx = ((mx + size/2.) / off_x * (ms.width as f32)) as isize - 1;
-                let gy = ((my + size/2.) / off_y * (ms.height as f32)) as isize - 1;
-                
-                // println!("damn... {:?} at {} {}", _c, gx, gy);
-                if (gx as usize) < ms.width && (gy as usize) < ms.height {
-                    ms.open(gx as usize, gy as usize);
-                }
+                // println!("damn... {:?} at {} {}", _c, x, y);
+                ms.open(x, y);
             }
 
             s.custom_size = size_vec;
 
             if ms.grid[y][x].flag {
-                s.color = Color::rgb(
-                    1.0,
-                    0.1,
-                    0.1
-                )
+                // s.color = Color::rgb(
+                //     1.0,
+                //     0.1,
+                //     0.1
+                // )
+                *i = a.load(Path::new("img").join("flag.png"));
             } else if ms.grid[y][x].revealed {
                 if ms.grid[y][x].bomb {
-                    s.color = Color::rgb(
-                        0.1,
-                        0.1,
-                        0.1
-                    )
+                    // s.color = Color::rgb(
+                    //     0.1,
+                    //     0.1,
+                    //     0.1
+                    // )
+                    *i = a.load(Path::new("img").join("bomb.png"));
                 } else {
                     let surr = ms.grid[y][x].surrounds; 
                     if surr != 0 {
-                        s.color = Color::rgb(
-                            (surr as f32 * PI / 8.).sin(),
-                            0.3,
-                            (surr as f32 * PI / 8.).cos()
-                        )
+                        // s.color = Color::rgb(
+                        //     (surr as f32 * PI / 8.).sin(),
+                        //     0.3,
+                        //     (surr as f32 * PI / 8.).cos()
+                        // )
+                        *i = a.load(Path::new("img").join(surr.to_string() + ".png"));
                     } else {
-                        s.color = Color::rgb(
-                            0.3,
-                            0.3,
-                            0.3
-                        )
+                        // s.color = Color::rgb(
+                        //     0.3,
+                        //     0.3,
+                        //     0.3
+                        // )
+                        *i = a.load(Path::new("img").join("open_cell.png"));
                     }
                 }
             } else {

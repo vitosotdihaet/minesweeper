@@ -11,7 +11,7 @@ fn main() {
 
     App::new()
         .init_resource::<MSInfo>()
-        .insert_resource(Msaa{ samples: 1 })
+        .insert_resource(Msaa{ samples: 0 })
         .insert_resource(ClearColor(Color::rgb(0., 0., 0.)))
         .add_plugins(DefaultPlugins.set(WindowPlugin {
             window: windows_info,
