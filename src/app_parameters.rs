@@ -139,7 +139,10 @@ pub fn run_ms(
         if let Some(moved_cursor) = cursor_moved.iter().last() {
             *cursor_position = moved_cursor.position;
         }
-        if mouse_button_input.just_released(MouseButton::Left) {
+
+        let left_click = mouse_button_input.just_released(MouseButton::Left);
+        let right_click = mouse_button_input.just_released(MouseButton::Right);
+        if left_click || right_click {
             mx = cursor_position.x;
             my = cursor_position.y;
         }
