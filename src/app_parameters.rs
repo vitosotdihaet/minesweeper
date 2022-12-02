@@ -133,22 +133,19 @@ pub fn run_ms(
             size
         ));
 
-        let mut mx: f32 = -1.;
-        let mut my: f32 = -1.;
-
         if let Some(moved_cursor) = cursor_moved.iter().last() {
-            *cursor_position = moved_cursor.position;
+            *cursor_position = moved_cursor.position;    
         }
 
         let left_click = mouse_button_input.just_released(MouseButton::Left);
         let right_click = mouse_button_input.just_released(MouseButton::Right);
-        if left_click || right_click {
-            mx = cursor_position.x;
-            my = cursor_position.y;
-        }
+        
+        let mx = cursor_position.x;
+        let my = cursor_position.y;
 
         let mut ind = 0;
         for (mut s, mut p, mut i) in sprites.iter_mut() {
+            // let mut last_i = &i;
             let x = ind % ms.width;
             let y = ind / ms.width;
 
@@ -183,8 +180,10 @@ pub fn run_ms(
                 // println!("damn... {:?} at {} {}", _c, x, y);
                 if left_click {
                     ms.open(x, y);
-                } else {
+                } else if right_click {
                     ms.flag(x, y);
+                } else {
+                    // *i = a.load(Path::new("img").join("over_cell.png"));
                 }
             }
 
