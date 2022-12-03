@@ -31,9 +31,12 @@ pub struct GameRes {
     imgs: HashMap<String, Handle<Image>>
 }
 
-pub fn startup(mut c: Commands, a: Res<AssetServer>) {
+pub fn startup(
+    mut c: Commands, a: Res<AssetServer>
+) {
     c.spawn(Camera2dBundle::default());
 
+    // Load all assets
     let mut names = vec!["open_cell".to_owned()];
     for i in 1..=8 {
         names.push(i.to_string().to_owned());
@@ -53,11 +56,11 @@ pub fn startup(mut c: Commands, a: Res<AssetServer>) {
 
 pub fn intro(
     mut c: Commands,
+    gr: Res<GameRes>,
+    mut state: ResMut<State<GameState>>,
     mut frame_count: Local<usize>,
     mut query: Query<(Entity, &mut Text)>,
-    mut state: ResMut<State<GameState>>,
-    gr: Res<GameRes>
-    ) {
+) {
     *frame_count += 1;
 
     if *frame_count == 1 {
@@ -120,16 +123,17 @@ pub fn init_ms(
 
 pub fn run_ms(
     // time: Res<Time>,
-    mut second_frame: Local<bool>,
-    mouse_button_input: Res<Input<MouseButton>>,
+    gr: Res<GameRes>,
     ms_info: Res<MSInfo>,
+    mouse_button_input: Res<Input<MouseButton>>,
     mut windows: ResMut<Windows>,
+    mut state: ResMut<State<GameState>>,
     mut cursor_moved: EventReader<CursorMoved>,
-    mut cursor_position: Local<Vec2>,
     mut ms: Local<Minesweeper>,
+    mut second_frame: Local<bool>,
+    mut cursor_position: Local<Vec2>,
     mut sprites: Query<(&mut Sprite, &mut Transform, &mut Handle<Image>), With<MS>>,
-    gr: Res<GameRes>
-    ) {
+) {
         if !*second_frame {
             *ms = Minesweeper::new(ms_info.width, ms_info.height, ms_info.bombs);
             *second_frame = true;
