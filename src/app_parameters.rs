@@ -218,6 +218,7 @@ pub fn run_ms(
             } else if ms.grid[y][x].revealed {
                 if ms.grid[y][x].bomb {
                     *i = gr.imgs.get("bomb").unwrap().clone();
+                    state.overwrite_set(GameState::Endgame).unwrap();
                 } else {
                     let surr = ms.grid[y][x].surrounds;
                     if surr == 0 {
@@ -229,4 +230,10 @@ pub fn run_ms(
             }
             ind += 1;
         }
+}
+
+pub fn endgame(
+    c: Commands,
+) {
+
 }
