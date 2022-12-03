@@ -1,6 +1,9 @@
-pub use bevy::{window::close_on_esc, prelude::*};
+pub use bevy::{window::close_on_esc, prelude::*, render::{
+    render_resource::SamplerDescriptor, 
+    texture::ImageSampler
+}};
 
-use bevy::sprite::collide_aabb::{Collision, collide};
+use bevy::{sprite::collide_aabb::{Collision, collide}};
 use std::{path::Path, cmp::{min, max}, collections::HashMap};
 
 use crate::minesweeper::*;
@@ -36,6 +39,7 @@ pub fn startup(
 ) {
     c.spawn(Camera2dBundle::default());
 
+    
     // Load all assets
     let mut names = vec!["open_cell".to_owned()];
     for i in 1..=8 {

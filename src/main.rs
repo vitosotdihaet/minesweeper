@@ -16,6 +16,9 @@ fn main() {
         .add_plugins(DefaultPlugins.set(WindowPlugin {
             window: windows_info,
             ..Default::default()
+        })
+        .set( ImagePlugin {
+            default_sampler: ImageSampler::nearest_descriptor(),
         }))
         .add_system(close_on_esc)
         .add_startup_system(startup)
