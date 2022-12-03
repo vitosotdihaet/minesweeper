@@ -150,6 +150,9 @@ pub fn run_ms(
             size
         ));
 
+        let pad_x = (window.width() / ((ms.width as f32 + 1.)))/2.;
+        let pad_y = (window.height() / ((ms.height as f32 + 1.)))/2.;
+
         if let Some(moved_cursor) = cursor_moved.iter().last() {
             *cursor_position = moved_cursor.position;    
         }
@@ -166,8 +169,8 @@ pub fn run_ms(
             let x = ind % ms.width;
             let y = ind / ms.width;
 
-            let tx = size/2. + (x as f32 - ms.width as f32  / 2.) * size;
-            let ty = size/2. + (y as f32 - ms.height as f32 / 2.) * size;
+            let tx = pad_x + (x as f32 - ms.width as f32  / 2.) * size;
+            let ty = pad_y + (y as f32 - ms.height as f32 / 2.) * size;
 
             let trans = Transform {
                 translation: Vec3::new(
