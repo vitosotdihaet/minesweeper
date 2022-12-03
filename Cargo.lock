@@ -244,7 +244,7 @@ dependencies = [
  "js-sys",
  "ndk-glue",
  "notify",
- "parking_lot 0.12.1",
+ "parking_lot",
  "serde",
  "thiserror",
  "wasm-bindgen",
@@ -264,7 +264,7 @@ dependencies = [
  "bevy_ecs",
  "bevy_reflect",
  "bevy_utils",
- "parking_lot 0.12.1",
+ "parking_lot",
  "rodio",
 ]
 
@@ -567,7 +567,7 @@ dependencies = [
  "erased-serde",
  "glam",
  "once_cell",
- "parking_lot 0.12.1",
+ "parking_lot",
  "serde",
  "smallvec",
  "thiserror",
@@ -620,7 +620,7 @@ dependencies = [
  "image",
  "naga",
  "once_cell",
- "parking_lot 0.12.1",
+ "parking_lot",
  "regex",
  "serde",
  "smallvec",
@@ -1121,9 +1121,9 @@ dependencies = [
 
 [[package]]
 name = "cpal"
-version = "0.14.1"
+version = "0.14.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e73413ddcb69c398125f5529714492e070c64c6a090ad5b01d8c082b320a0809"
+checksum = "f342c1b63e185e9953584ff2199726bf53850d96610a310e3aca09e9405a2d0b"
 dependencies = [
  "alsa",
  "core-foundation-sys",
@@ -1134,10 +1134,9 @@ dependencies = [
  "mach",
  "ndk 0.7.0",
  "ndk-context",
- "nix 0.25.0",
  "oboe",
  "once_cell",
- "parking_lot 0.12.1",
+ "parking_lot",
  "stdweb",
  "thiserror",
  "wasm-bindgen",
@@ -1450,7 +1449,7 @@ dependencies = [
  "libc",
  "libudev-sys",
  "log",
- "nix 0.25.0",
+ "nix 0.25.1",
  "uuid",
  "vec_map",
  "wasm-bindgen",
@@ -2015,7 +2014,7 @@ dependencies = [
  "ndk-macro",
  "ndk-sys 0.4.1+23.1.7779620",
  "once_cell",
- "parking_lot 0.12.1",
+ "parking_lot",
 ]
 
 [[package]]
@@ -2064,16 +2063,14 @@ dependencies = [
 
 [[package]]
 name = "nix"
-version = "0.25.0"
+version = "0.25.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e322c04a9e3440c327fca7b6c8a63e6890a32fa2ad689db972425f07e0d22abb"
+checksum = "f346ff70e7dbfd675fe90590b92d59ef2de15a8779ae305ebcbfd3f0caf59be4"
 dependencies = [
  "autocfg",
  "bitflags",
  "cfg-if",
  "libc",
- "memoffset",
- "pin-utils",
 ]
 
 [[package]]
@@ -2256,37 +2253,12 @@ checksum = "427c3892f9e783d91cc128285287e70a59e206ca452770ece88a76f7a3eddd72"
 
 [[package]]
 name = "parking_lot"
-version = "0.11.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7d17b78036a60663b797adeaee46f5c9dfebb86948d1255007a1d6be0271ff99"
-dependencies = [
- "instant",
- "lock_api",
- "parking_lot_core 0.8.5",
-]
-
-[[package]]
-name = "parking_lot"
 version = "0.12.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3742b2c103b9f06bc9fff0a37ff4912935851bee6d36f3c02bcc755bcfec228f"
 dependencies = [
  "lock_api",
- "parking_lot_core 0.9.5",
-]
-
-[[package]]
-name = "parking_lot_core"
-version = "0.8.5"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d76e8e1493bcac0d2766c42737f34458f1c8c50c0d23bcb24ea953affb273216"
-dependencies = [
- "cfg-if",
- "instant",
- "libc",
- "redox_syscall",
- "smallvec",
- "winapi",
+ "parking_lot_core",
 ]
 
 [[package]]
@@ -2329,12 +2301,6 @@ name = "pin-project-lite"
 version = "0.2.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e0a7ae3ac2f1173085d398531c705756c94a4c56843785df85a60c1a0afac116"
-
-[[package]]
-name = "pin-utils"
-version = "0.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8b870d8c151b6f2fb93e84a13146138f05d02ed11c7e7c54f8826aaaf7c9f184"
 
 [[package]]
 name = "pkg-config"
@@ -3080,7 +3046,7 @@ dependencies = [
  "js-sys",
  "log",
  "naga",
- "parking_lot 0.11.2",
+ "parking_lot",
  "raw-window-handle 0.5.0",
  "smallvec",
  "static_assertions",
@@ -3106,7 +3072,7 @@ dependencies = [
  "fxhash",
  "log",
  "naga",
- "parking_lot 0.11.2",
+ "parking_lot",
  "profiling",
  "raw-window-handle 0.5.0",
  "smallvec",
@@ -3142,7 +3108,7 @@ dependencies = [
  "metal",
  "naga",
  "objc",
- "parking_lot 0.11.2",
+ "parking_lot",
  "profiling",
  "range-alloc",
  "raw-window-handle 0.5.0",
@@ -3372,7 +3338,7 @@ dependencies = [
  "ndk-glue",
  "objc",
  "once_cell",
- "parking_lot 0.12.1",
+ "parking_lot",
  "percent-encoding",
  "raw-window-handle 0.4.3",
  "raw-window-handle 0.5.0",
