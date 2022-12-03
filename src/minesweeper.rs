@@ -73,24 +73,27 @@ impl Minesweeper {
     }
 
     pub fn open(&mut self, x: usize, y: usize) {
-        match self.grid[y][x].bomb {
-            true => {
-                self.grid[y][x].revealed = true;
-                self.playing = false;
-            }
-            false => {
-                if self.grid[y][x].surrounds != 0 {
+        if !self.grid[y][x].flag && self.playing {
+            match self.grid[y][x].bomb {
+                true => {
                     self.grid[y][x].revealed = true;
-                } else {
-                    self.open_empty(x, y)
+                    self.playing = false;
+                }
+                false => {
+                    if self.grid[y][x].surrounds != 0 {
+                        self.grid[y][x].revealed = true;
+                    } else {
+                        self.open_empty(x, y)
+                    }
                 }
             }
         }
     }
 
     pub fn flag(&mut self, x: usize, y: usize) {
-        self.grid[y][x].bomb = !self.grid[y][x].bomb;
-        self.grid[y][x].flag = !self.grid[y][x].flag;
+        if self.playing {
+            self.grid[y][x].flag = !self.grid[y][x].flag;
+        }
     }
 
     fn open_empty(&mut self, x: usize, y: usize) {
