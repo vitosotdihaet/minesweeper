@@ -1,6 +1,6 @@
 pub use bevy::{window::close_on_esc, prelude::*};
 
-use bevy::sprite::collide_aabb::collide;
+use bevy::sprite::collide_aabb::{Collision, collide};
 use std::{path::Path, cmp::{min, max}, collections::HashMap};
 
 use crate::minesweeper::*;
@@ -188,20 +188,24 @@ pub fn run_ms(
                 ..Default::default()
             };
 
-            if let Some(_c) = collide(
+            if let Some(collision) = collide(
                 collision_trans.translation,
                 size_vec.unwrap(),
                 Vec3::new(mx, my, 0.),
                 Vec2::new(1.0, 1.0)
             ) {
                 // println!("damn... {:?} at {} {}", _c, x, y);
-                if left_click {
-                    ms.open(x, y);
-                } else if right_click {
-                    ms.flag(x, y);
-                } else {
-                    // *i = a.load(Path::new("img").join("over_cell.png"));
+                if collision == Collision::Inside {
+                    if left_click {
+                        ms.open(x, y);
+                    } else if right_click {
+                        ms.flag(x, y);
+                    } else {
+                        *i = gr.imgs.get("over_cell").unwrap().clone();
+                    }
                 }
+            } else {
+                *i = gr.imgs.get("cell").unwrap().clone();
             }
 
             s.custom_size = size_vec;
