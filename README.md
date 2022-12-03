@@ -1,6 +1,7 @@
-# Rust Minesweeper
+# Rust Minesweeper 💣
 A known game Minesweeper realized in Rust using Bevy game engine!
 
+### Screenshot:
 ![image](https://user-images.githubusercontent.com/67521698/205448001-e981e8f9-f972-4709-a839-2490f6b9b9ec.png)
 
 # State of project
