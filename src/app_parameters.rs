@@ -1,7 +1,7 @@
 pub use bevy::{window::close_on_esc, prelude::*};
 
 use bevy::sprite::collide_aabb::collide;
-use std::{path::Path, cmp::{min, max}};
+use std::{path::Path, cmp::{min, max}, collections::HashMap};
 
 use crate::minesweeper::*;
 
@@ -28,14 +28,26 @@ pub enum GameState {
 #[derive(Resource)]
 pub struct GameRes {
     font_m: Handle<Font>,
-    // sprites: Vec<SpriteBundle>
+    imgs: HashMap<String, Handle<Image>>
 }
 
 pub fn startup(mut c: Commands, a: Res<AssetServer>) {
     c.spawn(Camera2dBundle::default());
 
+    let mut names = vec!["open_cell".to_owned()];
+    for i in 1..=8 {
+        names.push(i.to_string().to_owned());
+    }
+    names.extend(vec!["bomb".to_owned(), "cell".to_owned(), "flag".to_owned(), "over_cell".to_owned()]);
+
+    let mut imgs = HashMap::new();
+    for e in names {
+        imgs.insert(e.clone(), a.load(Path::new("img").join(e + ".png")));
+    }
+
     c.insert_resource(GameRes {
         font_m: a.load(Path::new("fonts").join("Nunito-Regular.ttf")),
+        imgs
     });
 }
 
@@ -116,7 +128,7 @@ pub fn run_ms(
     mut cursor_position: Local<Vec2>,
     mut ms: Local<Minesweeper>,
     mut sprites: Query<(&mut Sprite, &mut Transform, &mut Handle<Image>), With<MS>>,
-    a: Res<AssetServer>
+    gr: Res<GameRes>
     ) {
         if !*second_frame {
             *ms = Minesweeper::new(ms_info.width, ms_info.height, ms_info.bombs);
@@ -125,8 +137,9 @@ pub fn run_ms(
 
         let window = windows.get_primary_mut().unwrap();
         let grid_max = max(ms.width, ms.height) as f32;
-        let grid_min = min(ms.width, ms.height) as f32;
+        // let grid_min = min(ms.width, ms.height) as f32;
         let wind_min = f32::min(window.width(), window.height());
+        
         let size = wind_min / (grid_max + 1.);
         let size_vec = Some(Vec2::new(
             size,
@@ -190,16 +203,16 @@ pub fn run_ms(
             s.custom_size = size_vec;
 
             if ms.grid[y][x].flag {
-                *i = a.load(Path::new("img").join("flag.png"));
+                *i = gr.imgs.get("flag").unwrap().clone();
             } else if ms.grid[y][x].revealed {
                 if ms.grid[y][x].bomb {
-                    *i = a.load(Path::new("img").join("bomb.png"));
+                    *i = gr.imgs.get("bomb").unwrap().clone();
                 } else {
-                    let surr = ms.grid[y][x].surrounds; 
-                    if surr != 0 {
-                        *i = a.load(Path::new("img").join(surr.to_string() + ".png"));
+                    let surr = ms.grid[y][x].surrounds;
+                    if surr == 0 {
+                        *i = gr.imgs.get("open_cell").unwrap().clone();
                     } else {
-                        *i = a.load(Path::new("img").join("open_cell.png"));
+                        *i = gr.imgs.get(&surr.to_string()).unwrap().clone();
                     }
                 }
             }
