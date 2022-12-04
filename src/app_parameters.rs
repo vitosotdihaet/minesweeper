@@ -9,7 +9,6 @@ use std::{path::Path, cmp::{min, max}, collections::HashMap};
 use crate::minesweeper::*;
 
 const INTRO_FONT_SIZE: f32 = 60.0;
-// const IMGS_PATH: &Path = Path::new("imgs");
 
 #[derive(Resource, Clone, Copy, Default)]
 pub struct MSInfo {
