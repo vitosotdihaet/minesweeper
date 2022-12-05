@@ -206,12 +206,27 @@ pub fn run_ms(
                         ms.open(x, y);
                     } else if right_click {
                         ms.flag(x, y);
+                        if ms.grid[y][x].flag {
+                            *i = gr.imgs.get("flag").unwrap().clone();
+                        } else {
+                            *i = gr.imgs.get("cell").unwrap().clone();
+                        }
                     } else {
-                        *i = gr.imgs.get("over_cell").unwrap().clone();
+                        s.color = Color::rgb(
+                            0.8,
+                            0.8,
+                            0.8
+                        )
+                        // *i = gr.imgs.get("over_cell").unwrap().clone();
                     }
                 }
             } else {
-                *i = gr.imgs.get("cell").unwrap().clone();
+                s.color = Color::rgb(
+                    1.0,
+                    1.0,
+                    1.0,
+                )
+                // *i = gr.imgs.get("cell").unwrap().clone();
             }
 
             s.custom_size = size_vec;
