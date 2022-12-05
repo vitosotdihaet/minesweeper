@@ -38,7 +38,6 @@ pub fn startup(
 ) {
     c.spawn(Camera2dBundle::default());
 
-    
     // Load all assets
     let mut names = vec!["open_cell".to_owned()];
     for i in 1..=8 {
@@ -101,15 +100,16 @@ pub fn init_ms(
     mut ms_info: ResMut<MSInfo>,
     a: Res<AssetServer>
 ) {
-    // let mut chosen: bool = true;
-    // while !chosen {
-        *ms_info = MSInfo {
-            width: 15,
-            height: 10,
-            bombs: 10
-        };
-        c.insert_resource(*ms_info);
-    // }
+    let mut chosen: bool = true;
+    while !chosen {
+    }
+    *ms_info = MSInfo {
+        width: 15,
+        height: 10,
+        bombs: 10
+    };
+    c.insert_resource(*ms_info);
+
     for _ in 0..ms_info.width * ms_info.height {
         c.spawn(SpriteBundle {
             texture: a.load(Path::new("img").join("cell.png")),
