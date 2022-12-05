@@ -26,6 +26,8 @@ fn main() {
         .add_system_set(SystemSet::on_update(GameState::Intro).with_system(intro))
         .add_system_set(SystemSet::on_enter(GameState::Playing).with_system(init_ms))
         .add_system_set(SystemSet::on_update(GameState::Playing).with_system(run_ms))
+        .add_system_set(SystemSet::on_enter(GameState::Endgame).with_system(endgame_init))
+        .add_system_set(SystemSet::on_update(GameState::Endgame).with_system(endgame))
         .run();
 
 }

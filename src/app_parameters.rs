@@ -250,8 +250,32 @@ pub fn run_ms(
         }
 }
 
-pub fn endgame(
-    c: Commands,
+pub fn endgame_init(
+    gr: Res<GameRes>,
+    mut c: Commands,
 ) {
+    c.spawn(Text2dBundle {
+        text: Text {
+            sections: vec![TextSection {
+                value: "Game Over!".to_owned(),
+                style: TextStyle {
+                    font: gr.font_m.clone(),
+                    font_size: INTRO_FONT_SIZE,
+                    color: Color::BLACK,
+                },
+            }],
+            alignment: TextAlignment {
+                vertical: VerticalAlign::Center,
+                horizontal: HorizontalAlign::Center,
+            },
+        },
+        ..Default::default()
+    });
+}
 
+pub fn endgame(
+    mut query: Query<(Entity, &mut Text)>,
+) {
+    let mut text = query.single_mut().1;
+    text.sections[0].style.color = Color::rgb(1.0, 0.6, 0.0);
 }
