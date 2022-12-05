@@ -86,7 +86,7 @@ pub fn intro(
         });
     } else if *frame_count < 50 {
         let mut text: Mut<Text> = query.single_mut().1;
-        text.sections[0].style.color = Color::rgba(1.0, 1.0, 1.0, (*frame_count as f32) / 150.0);
+        text.sections[0].style.color = Color::rgba(1.0, 1.0, 1.0, (*frame_count as f32) / 50.0);
     } else if *frame_count == 50 {
         let e: Entity = query.single_mut().0;
         c.entity(e).despawn();
