@@ -162,7 +162,7 @@ pub fn run_ms(
 
         let left_click = mouse_button_input.just_released(MouseButton::Left);
         let right_click = mouse_button_input.just_released(MouseButton::Right);
-        
+
         let mx = cursor_position.x;
         let my = cursor_position.y;
 
