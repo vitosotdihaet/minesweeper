@@ -43,7 +43,7 @@ pub fn startup(
     for i in 1..=8 {
         names.push(i.to_string().to_owned());
     }
-    names.extend(vec!["bomb".to_owned(), "cell".to_owned(), "flag".to_owned(), "over_cell".to_owned()]);
+    names.extend(vec!["bomb".to_owned(), "cell".to_owned(), "flag".to_owned()]);
 
     let mut imgs = HashMap::new();
     for e in names {
@@ -200,7 +200,6 @@ pub fn run_ms(
                 Vec3::new(mx, my, 0.),
                 Vec2::new(1.0, 1.0)
             ) {
-                // println!("damn... {:?} at {} {}", _c, x, y);
                 if collision == Collision::Inside {
                     if left_click {
                         ms.open(x, y);
@@ -217,7 +216,6 @@ pub fn run_ms(
                             0.8,
                             0.8
                         )
-                        // *i = gr.imgs.get("over_cell").unwrap().clone();
                     }
                 }
             } else {
@@ -226,7 +224,6 @@ pub fn run_ms(
                     1.0,
                     1.0,
                 )
-                // *i = gr.imgs.get("cell").unwrap().clone();
             }
 
             s.custom_size = size_vec;
