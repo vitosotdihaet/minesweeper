@@ -244,29 +244,86 @@ pub fn run_ms(
 pub fn endgame_init(
     gr: Res<GameRes>,
     mut c: Commands,
-) {
+) {    
     c.spawn(Text2dBundle {
         text: Text {
             sections: vec![TextSection {
                 value: "Game Over!".to_owned(),
                 style: TextStyle {
-                    font: gr.font_m.clone(),
+                    font: gr.font.clone(),
                     font_size: INTRO_FONT_SIZE,
-                    color: Color::BLACK,
+                    color: Color::rgb(1.0, 0.1, 0.1),
                 },
             }],
             alignment: TextAlignment {
-                vertical: VerticalAlign::Center,
+                vertical: VerticalAlign::Top,
                 horizontal: HorizontalAlign::Center,
             },
         },
+        transform: Transform {
+            translation: Vec3 {
+                z: 1.,
+                ..Default::default()
+            },
+            ..Default::default()
+        },
         ..Default::default()
+    });
+    
+    let (button_w, button_h) = (400., 225.);
+
+    c.spawn(ButtonBundle {
+        style: Style {
+            size: Size::new(Val::Px(button_w), Val::Px(button_h)),
+            margin: UiRect::all(Val::Auto),
+            justify_content: JustifyContent::Center,
+            align_items: AlignItems::Center,
+            ..Default::default()
+        },
+        background_color: BackgroundColor::from(Color::rgb(0.6, 0.6, 0.6)),
+        transform: Transform {
+            translation: Vec3 {
+                x: 0.,
+                y: 0.,
+                z: 1.
+            },
+            ..Default::default()
+        },
+        ..Default::default()
+    })
+    .with_children(|parent| {
+        parent.spawn(TextBundle::from_section(
+            "Restart",
+            TextStyle {
+                font: gr.font.clone(),
+                font_size: 80.,
+                color: Color::rgb(1., 1., 1.)
+            }
+        ));
     });
 }
 
 pub fn endgame(
-    mut query: Query<(Entity, &mut Text)>,
+    windows: Res<Windows>,
+    // mut interaction_query: Query<
+    //     (&Interaction, &mut BackgroundColor, &Children),
+    //     (Changed<Interaction>, With<Button>),
+    // >,
+    mut text_query: Query<(&mut Text, &mut Transform), Without<Button>>,
 ) {
-    let mut text = query.single_mut().1;
-    text.sections[0].style.color = Color::rgb(1.0, 0.6, 0.0);
+    let window = windows.get_primary().unwrap();
+    let (w, h) = (window.width(), window.height());
+
+    for (mut _game_over_text, mut game_over_transform) in text_query.iter_mut() {
+        *game_over_transform = Transform {
+            translation: Vec3 {
+                x: 0.,
+                y: h/2. - 100.,
+                z: 1.
+            },
+            ..Default::default()
+        }
+    }
+
+
 }
