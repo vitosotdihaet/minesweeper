@@ -155,8 +155,8 @@ pub fn run_ms(
             size
         ));
 
-        let pad_x = (window.width() / ((ms.width as f32 + 1.)))/2.;
-        let pad_y = (window.height() / ((ms.height as f32 + 1.)))/2.;
+        let pad_x = size/2.;
+        let pad_y = size/2.;
 
         if let Some(moved_cursor) = cursor_moved.iter().last() {
             *cursor_position = moved_cursor.position;    
