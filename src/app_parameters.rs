@@ -4,7 +4,7 @@ pub use bevy::{window::close_on_esc, prelude::*, render::{
 }};
 
 use bevy::{sprite::collide_aabb::{Collision, collide}};
-use std::{path::Path, cmp::{min, max}, collections::HashMap};
+use std::{path::Path, cmp::max, collections::HashMap};
 
 use crate::minesweeper::*;
 
@@ -29,7 +29,7 @@ pub enum GameState {
 
 #[derive(Resource)]
 pub struct GameRes {
-    font_m: Handle<Font>,
+    font: Handle<Font>,
     imgs: HashMap<String, Handle<Image>>
 }
 
@@ -51,14 +51,14 @@ pub fn startup(
     }
 
     c.insert_resource(GameRes {
-        font_m: a.load(Path::new("fonts").join("Nunito-Regular.ttf")),
+        font: a.load(Path::new("fonts").join("Nunito-Regular.ttf")),
         imgs
     });
 }
 
 pub fn intro(
-    mut c: Commands,
     gr: Res<GameRes>,
+    mut c: Commands,
     mut state: ResMut<State<GameState>>,
     mut frame_count: Local<usize>,
     mut query: Query<(Entity, &mut Text)>,
@@ -71,7 +71,7 @@ pub fn intro(
                 sections: vec![TextSection {
                     value: "Minesweeper!".to_owned(),
                     style: TextStyle {
-                        font: gr.font_m.clone(),
+                        font: gr.font.clone(),
                         font_size: INTRO_FONT_SIZE,
                         color: Color::BLACK,
                     },
@@ -94,15 +94,17 @@ pub fn intro(
 }
 
 pub fn init_ms(
+    a: Res<AssetServer>,
     mut c: Commands, 
     // mut cursor_moved_event_reader: EventReader<CursorMoved>,
     // mut cursor_position: Local<Vec2>,
     mut ms_info: ResMut<MSInfo>,
-    a: Res<AssetServer>
 ) {
-    let mut chosen: bool = true;
-    while !chosen {
-    }
+    // let mut chosen = true;
+    // while !chosen {
+
+    // }
+
     *ms_info = MSInfo {
         width: 15,
         height: 10,
@@ -129,7 +131,7 @@ pub fn run_ms(
     gr: Res<GameRes>,
     ms_info: Res<MSInfo>,
     mouse_button_input: Res<Input<MouseButton>>,
-    mut windows: ResMut<Windows>,
+    windows: Res<Windows>,
     mut state: ResMut<State<GameState>>,
     mut cursor_moved: EventReader<CursorMoved>,
     mut ms: Local<Minesweeper>,
@@ -142,7 +144,7 @@ pub fn run_ms(
             *second_frame = true;
         }
 
-        let window = windows.get_primary_mut().unwrap();
+        let window = windows.get_primary().unwrap();
         let grid_max = max(ms.width, ms.height) as f32;
         // let grid_min = min(ms.width, ms.height) as f32;
         let wind_min = f32::min(window.width(), window.height());
@@ -211,19 +213,11 @@ pub fn run_ms(
                             *i = gr.imgs.get("cell").unwrap().clone();
                         }
                     } else {
-                        s.color = Color::rgb(
-                            0.8,
-                            0.8,
-                            0.8
-                        )
+                        s.color = Color::rgb(0.8, 0.8, 0.8)
                     }
                 }
             } else {
-                s.color = Color::rgb(
-                    1.0,
-                    1.0,
-                    1.0,
-                )
+                s.color = Color::rgb(1.0, 1.0, 1.0)
             }
 
             s.custom_size = size_vec;
