@@ -43,7 +43,7 @@ impl Minesweeper {
         let mut rng = rand::thread_rng();
         let mut count = 0;
 
-        while count != number_of_mines {
+        while count != number_of_mines { // TODO remake random generator to prevent from failing on the first move
             let y = rng.gen_range(0..height);
             let x = rng.gen_range(0..width);
 
