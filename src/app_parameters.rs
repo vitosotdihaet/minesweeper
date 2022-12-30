@@ -9,6 +9,11 @@ use std::{path::Path, cmp::max, collections::HashMap};
 use crate::minesweeper::*;
 
 const INTRO_FONT_SIZE: f32 = 60.0;
+const INPUT_TEXT_FONT_SIZE: f32 = 120.0;
+
+const NORMAL_BUTTON: Color = Color::rgb(0.75, 0.75, 0.75);
+const HOVERED_BUTTON: Color = Color::rgb(0.8, 0.8, 0.8);
+const PRESSED_BUTTON: Color = Color::rgb(0.3, 0.3, 0.3);
 
 #[derive(Resource, Clone, Copy, Default)]
 pub struct MSInfo {
@@ -19,6 +24,9 @@ pub struct MSInfo {
 
 #[derive(Component)]
 pub struct MS;
+
+#[derive(Component)]
+pub struct InputText;
 
 #[derive(Clone, PartialEq, Eq, Debug, Hash)]
 pub enum GameState {
@@ -59,70 +67,191 @@ pub fn startup(
 pub fn intro(
     gr: Res<GameRes>,
     mut c: Commands,
-    mut state: ResMut<State<GameState>>,
-    mut frame_count: Local<usize>,
-    mut query: Query<(Entity, &mut Text)>,
 ) {
-    *frame_count += 1;
-
-    if *frame_count == 1 {
-        c.spawn(Text2dBundle {
-            text: Text {
-                sections: vec![TextSection {
-                    value: "Minesweeper!".to_owned(),
-                    style: TextStyle {
-                        font: gr.font.clone(),
-                        font_size: INTRO_FONT_SIZE,
-                        color: Color::BLACK,
-                    },
-                }],
-                alignment: TextAlignment {
-                    vertical: VerticalAlign::Center,
-                    horizontal: HorizontalAlign::Center,
+    // spawn starting text
+    c.spawn(Text2dBundle {
+        text: Text {
+            sections: vec![TextSection {
+                value: "Size of Minesweeper grid:".to_owned(),
+                style: TextStyle {
+                    font: gr.font.clone(),
+                    font_size: INTRO_FONT_SIZE,
+                    color: Color::rgb(0.9, 0.9, 0.9),
                 },
+            }],
+            alignment: TextAlignment {
+                vertical: VerticalAlign::Top,
+                horizontal: HorizontalAlign::Left,
+            },
+        },
+        transform: Transform {
+            translation: Vec3 {
+                x: -225.,
+                y: 225.,
+                z: 1.,
             },
             ..Default::default()
-        });
-    } else if *frame_count < 50 {
-        let mut text: Mut<Text> = query.single_mut().1;
-        text.sections[0].style.color = Color::rgba(1.0, 1.0, 1.0, (*frame_count as f32) / 50.0);
-    } else if *frame_count == 50 {
-        let e: Entity = query.single_mut().0;
-        c.entity(e).despawn();
-        state.overwrite_set(GameState::Playing).unwrap();
-    }
+        },
+        ..Default::default()
+    });
+
+    // spawn input text 
+    c.spawn(Text2dBundle {
+        text: Text {
+            sections: vec![TextSection {
+                value: "10".to_owned(),
+                style: TextStyle {
+                    font: gr.font.clone(),
+                    font_size: INPUT_TEXT_FONT_SIZE,
+                    color: Color::rgb(0.9, 0.9, 0.9),
+                },
+            }],
+            alignment: TextAlignment {
+                vertical: VerticalAlign::Top,
+                horizontal: HorizontalAlign::Left,
+            },
+        },
+        transform: Transform {
+            translation: Vec3 {
+                x: -225.,
+                y: 175.,
+                z: 1.,
+            },
+            ..Default::default()
+        },
+        ..Default::default()
+    })
+    .insert(InputText);
+
+    // spawn start button
+    c.spawn(ButtonBundle {
+        style: Style {
+            size: Size::new(Val::Px(450.), Val::Px(100.)),
+            margin: UiRect::all(Val::Auto),
+            justify_content: JustifyContent::Center,
+            align_items: AlignItems::Center,
+            ..Default::default()
+        },
+        background_color: BackgroundColor::from(NORMAL_BUTTON),
+        transform: Transform {
+            translation: Vec3 {
+                x: 0.,
+                y: 0.,
+                z: 1.
+            },
+            ..Default::default()
+        },
+        ..Default::default()
+    })
+    .with_children(|parent| {
+        parent.spawn(TextBundle::from_section(
+            "Start!",
+            TextStyle {
+                font: gr.font.clone(),
+                font_size: 80.,
+                color: Color::rgb(1., 1., 1.)
+            }
+        ));
+    });
 }
 
 pub fn init_ms(
     a: Res<AssetServer>,
+    keys: Res<Input<KeyCode>>,
     mut c: Commands, 
     // mut cursor_moved_event_reader: EventReader<CursorMoved>,
     // mut cursor_position: Local<Vec2>,
+    mut char_evr: EventReader<ReceivedCharacter>,
     mut ms_info: ResMut<MSInfo>,
+    mut state: ResMut<State<GameState>>,
+    mut chosen: Local<bool>,
+    mut pressed: Local<bool>,
+    mut text_query: Query<&mut Text, With<InputText>>,
+    mut interaction_query: Query<
+        (&Interaction, &mut BackgroundColor),
+        (Changed<Interaction>, With<Button>),
+    >,
+    button_entity_query: Query<Entity, With<Button>>,
+    button_text_entity_query: Query<Entity, With<Text>>,
 ) {
-    // let mut chosen = true;
-    // while !chosen {
+    let mut input_text;
 
-    // }
+    if !*chosen {
+        for mut text in &mut text_query {
+            input_text = &mut (*text).sections[0].value;
 
-    *ms_info = MSInfo {
-        width: 15,
-        height: 10,
-        bombs: 10
-    };
-    c.insert_resource(*ms_info);
+            for ev in char_evr.iter() {
+                if '0' <= ev.char && ev.char <= '9' { 
+                    input_text.push(ev.char);
+                }
+            }
 
-    for _ in 0..ms_info.width * ms_info.height {
-        c.spawn(SpriteBundle {
-            texture: a.load(Path::new("img").join("cell.png")),
-            sprite: Sprite {
-                color: Color::Rgba{red: 1., green: 1., blue: 1., alpha: 1.},
-                custom_size: Some(Vec2::new(1., 1.)),
+            for (interaction, mut color) in &mut interaction_query {
+                match *interaction {
+                    Interaction::Clicked => {
+                        *color = PRESSED_BUTTON.into();
+                        *pressed = true;
+                    }
+                    Interaction::Hovered => {
+                        *color = HOVERED_BUTTON.into();
+                    }
+                    Interaction::None => {
+                        *color = NORMAL_BUTTON.into();
+                    }
+                }
+            }
+
+            if keys.just_pressed(KeyCode::Back) {
+                if input_text.len() > 0 {
+                    input_text.pop();
+                }
+            } else if keys.just_pressed(KeyCode::Return) || *pressed { // TODO add if statement for pressing button
+                // change state and 
+                match (*input_text).trim().parse::<isize>() {
+                    Ok(ms_size) => {
+                        if ms_size > 0 {
+                            input_text.clear();
+                            // change info of ms_info
+                            *ms_info = MSInfo {
+                                width: ms_size as usize,
+                                height: ms_size as usize,
+                                bombs: (ms_size * ms_size / 10) as usize,
+                            };
+                            *chosen = true;
+                    }
+                    },
+                    _ => {
+                        println!("Wrong input!"); // TODO make err graphical
+                    }
+                }
+            }
+        }
+    }
+
+    if *chosen {
+        for e in button_text_entity_query.iter() {
+            c.entity(e).despawn();
+        }
+        for e in button_entity_query.iter() {
+            c.entity(e).despawn();
+        }
+
+        c.insert_resource(*ms_info);
+
+        for _ in 0..ms_info.width * ms_info.height {
+            c.spawn(SpriteBundle {
+                texture: a.load(Path::new("img").join("cell.png")),
+                sprite: Sprite {
+                    color: Color::Rgba{red: 1., green: 1., blue: 1., alpha: 1.},
+                    custom_size: Some(Vec2::new(1., 1.)),
+                    ..Default::default()
+                },
                 ..Default::default()
-            },
-            ..Default::default()
-        })
-        .insert(MS);
+            })
+            .insert(MS);
+        }
+
+        state.overwrite_set(GameState::Playing).unwrap();
     }
 }
 
@@ -270,11 +399,9 @@ pub fn endgame_init(
         ..Default::default()
     });
     
-    let (button_w, button_h) = (400., 225.);
-
     c.spawn(ButtonBundle {
         style: Style {
-            size: Size::new(Val::Px(button_w), Val::Px(button_h)),
+            size: Size::new(Val::Px(400.), Val::Px(100.)),
             margin: UiRect::all(Val::Auto),
             justify_content: JustifyContent::Center,
             align_items: AlignItems::Center,
