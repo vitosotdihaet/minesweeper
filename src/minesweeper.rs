@@ -43,7 +43,7 @@ impl Minesweeper {
         let mut rng = rand::thread_rng();
         let mut count = 0;
 
-        while number_of_mines != count {
+        while count != number_of_mines {
             let y = rng.gen_range(0..height);
             let x = rng.gen_range(0..width);
 
