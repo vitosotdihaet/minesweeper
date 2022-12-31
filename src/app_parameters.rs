@@ -417,7 +417,7 @@ pub fn endgame_init(
     
     c.spawn(ButtonBundle {
         style: Style {
-            size: Size::new(Val::Px(400.), Val::Px(100.)),
+            size: Size::new(Val::Px(450.), Val::Px(100.)),
             margin: UiRect::all(Val::Auto),
             justify_content: JustifyContent::Center,
             align_items: AlignItems::Center,
