@@ -216,7 +216,7 @@ pub fn init_ms(
                 if input_text.len() > 0 {
                     input_text.pop();
                 }
-            } else if keys.just_pressed(KeyCode::Return) || *pressed { // TODO add if statement for pressing button
+            } else if keys.just_pressed(KeyCode::Return) || *pressed {
                 // change state and 
                 match (*input_text).trim().parse::<isize>() {
                     Ok(ms_size) => {
