@@ -19,7 +19,12 @@ const PRESSED_BUTTON: Color = Color::rgb(0.3, 0.3, 0.3);
 pub struct MSInfo {
     width: usize,
     height: usize,
-    bombs: usize
+    bombs: usize,
+}
+
+#[derive(Resource, Clone, Copy, Default, Debug)]
+pub struct GameWon {
+    value: bool, 
 }
 
 #[derive(Component)]
@@ -32,13 +37,13 @@ pub struct InputText;
 pub enum GameState {
     Intro,
     Playing,
-    Endgame
+    Endgame,
 }
 
 #[derive(Resource)]
 pub struct GameRes {
     font: Handle<Font>,
-    imgs: HashMap<String, Handle<Image>>
+    imgs: HashMap<String, Handle<Image>>,
 }
 
 pub fn startup(
@@ -263,7 +268,7 @@ pub fn init_ms(
             .insert(MS);
         }
 
-        state.set(GameState::Playing).unwrap();
+        state.overwrite_set(GameState::Playing).unwrap();
     }
 }
 
@@ -274,6 +279,7 @@ pub fn run_ms(
     mouse_button_input: Res<Input<MouseButton>>,
     windows: Res<Windows>,
     mut state: ResMut<State<GameState>>,
+    mut game_won: ResMut<GameWon>,
     mut cursor_moved: EventReader<CursorMoved>,
     mut ms: Local<Minesweeper>,
     mut second_frame: Local<bool>,
@@ -314,9 +320,19 @@ pub fn run_ms(
     let my = cursor_position.y;
 
     let mut ind = 0;
+    let mut flagged_bombs = 0;
+    let mut revealed = 0;
     for (mut s, mut p, mut i) in &mut sprites {
         let x = ind % ms.width;
         let y = ind / ms.width;
+
+
+        if ms.grid[y][x].bomb && ms.grid[y][x].flag {
+            flagged_bombs += 1;
+        }
+        if ms.grid[y][x].revealed {
+            revealed += 1;
+        }
 
         let tx = pad_x + (x as f32 - ms.width as f32  / 2.) * size;
         let ty = pad_y + (y as f32 - ms.height as f32 / 2.) * size;
@@ -366,13 +382,14 @@ pub fn run_ms(
 
         s.custom_size = size_vec;
 
+        // change sprite
         if ms.grid[y][x].flag {
             *i = gr.imgs.get("flag").unwrap().clone();
         } else if ms.grid[y][x].revealed {
             if ms.grid[y][x].bomb {
                 *i = gr.imgs.get("bomb").unwrap().clone();
                 *second_frame = false;
-                state.set(GameState::Endgame).unwrap();
+                game_won.value = false;
             } else {
                 let surr = ms.grid[y][x].surrounds;
                 if surr == 0 {
@@ -382,22 +399,52 @@ pub fn run_ms(
                 }
             }
         }
+        
+        if ms_info.width * ms_info.height - revealed == flagged_bombs && flagged_bombs == ms_info.bombs {
+            *second_frame = false;
+            game_won.value = true;
+        }
+
         ind += 1;
+    }
+
+    if !*second_frame {
+        let mut ind = 0;
+        for (mut _s, mut _p, mut i) in &mut sprites {
+            let x = ind % ms.width;
+            let y = ind / ms.width;
+
+            if ms.grid[y][x].bomb {
+                *i = gr.imgs.get("bomb").unwrap().clone();
+            }
+
+            ind += 1;
+        }
+
+        state.set(GameState::Endgame).unwrap();
     }
 }
 
 pub fn endgame_init(
     gr: Res<GameRes>,
     mut c: Commands,
-) {    
+    game_won: ResMut<GameWon>,
+) {
+    let mut win_text = "Game Over!";
+    let mut text_color = Color::rgb(1.0, 0.1, 0.1);
+    if game_won.value {
+        win_text = "You Won!";
+        text_color = Color::rgb(0.1, 1.0, 0.1);
+    }
+
     c.spawn(Text2dBundle {
         text: Text {
             sections: vec![TextSection {
-                value: "Game Over!".to_owned(),
+                value: win_text.to_owned(),
                 style: TextStyle {
                     font: gr.font.clone(),
                     font_size: INTRO_FONT_SIZE,
-                    color: Color::rgb(1.0, 0.1, 0.1),
+                    color: text_color,
                 },
             }],
             alignment: TextAlignment {
@@ -450,13 +497,13 @@ pub fn endgame(
     windows: Res<Windows>,
     mut c: Commands,
     mut state: ResMut<State<GameState>>,
+    mut text_query: Query<(&Text, &mut Transform), Without<Button>>,
+    mut clicked: Local<bool>,
+    mut pressed: Local<bool>,
     mut interaction_query: Query<
         (&Interaction, &mut BackgroundColor),
         (Changed<Interaction>, With<Button>),
     >,
-    mut text_query: Query<(&Text, &mut Transform), Without<Button>>,
-    mut clicked: Local<bool>,
-    mut pressed: Local<bool>,
     ms_entity_query: Query<Entity, With<MS>>,
     button_entity_query: Query<Entity, With<Button>>,
     text_entity_query: Query<Entity, With<Text>>,
@@ -508,6 +555,6 @@ pub fn endgame(
             c.entity(e).despawn();
         }
 
-        state.set(GameState::Intro).unwrap();
+        state.overwrite_set(GameState::Intro).unwrap();
     }
 }

@@ -11,6 +11,7 @@ fn main() {
 
     App::new()
         .init_resource::<MSInfo>()
+        .init_resource::<GameWon>()
         .insert_resource(Msaa{ samples: 0 })
         .insert_resource(ClearColor(Color::rgb(0., 0., 0.)))
         .add_plugins(DefaultPlugins.set(WindowPlugin {
