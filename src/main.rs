@@ -29,5 +29,4 @@ fn main() {
         .add_system_set(SystemSet::on_enter(GameState::Endgame).with_system(endgame_init))
         .add_system_set(SystemSet::on_update(GameState::Endgame).with_system(endgame))
         .run();
-
 }
