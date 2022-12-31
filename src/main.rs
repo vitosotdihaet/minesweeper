@@ -23,7 +23,7 @@ fn main() {
         .add_system(close_on_esc)
         .add_startup_system(startup)
         .add_state(GameState::Intro)
-        .add_system_set(SystemSet::on_enter(GameState::Intro).with_system(intro))
+        .add_system_set(SystemSet::on_enter(GameState::Intro).with_system(init))
         .add_system_set(SystemSet::on_update(GameState::Intro).with_system(init_ms))
         .add_system_set(SystemSet::on_update(GameState::Playing).with_system(run_ms))
         .add_system_set(SystemSet::on_enter(GameState::Endgame).with_system(endgame_init))

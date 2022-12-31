@@ -64,7 +64,7 @@ pub fn startup(
     });
 }
 
-pub fn intro(
+pub fn init(
     gr: Res<GameRes>,
     mut c: Commands,
 ) {
