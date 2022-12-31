@@ -11,11 +11,11 @@ use crate::minesweeper::*;
 const INTRO_FONT_SIZE: f32 = 60.0;
 const INPUT_TEXT_FONT_SIZE: f32 = 120.0;
 
-const NORMAL_BUTTON: Color = Color::rgb(0.75, 0.75, 0.75);
+const NORMAL_BUTTON: Color = Color::rgb(0.7, 0.7, 0.7);
 const HOVERED_BUTTON: Color = Color::rgb(0.8, 0.8, 0.8);
 const PRESSED_BUTTON: Color = Color::rgb(0.3, 0.3, 0.3);
 
-#[derive(Resource, Clone, Copy, Default)]
+#[derive(Resource, Clone, Copy, Default, Debug)]
 pub struct MSInfo {
     width: usize,
     height: usize,
@@ -42,7 +42,8 @@ pub struct GameRes {
 }
 
 pub fn startup(
-    mut c: Commands, a: Res<AssetServer>
+    a: Res<AssetServer>,
+    mut c: Commands,
 ) {
     c.spawn(Camera2dBundle::default());
 
@@ -153,18 +154,18 @@ pub fn init(
             }
         ));
     });
+    // println!("intro!");
 }
 
 pub fn init_ms(
     a: Res<AssetServer>,
     keys: Res<Input<KeyCode>>,
     mut c: Commands, 
-    // mut cursor_moved_event_reader: EventReader<CursorMoved>,
-    // mut cursor_position: Local<Vec2>,
     mut char_evr: EventReader<ReceivedCharacter>,
     mut ms_info: ResMut<MSInfo>,
     mut state: ResMut<State<GameState>>,
     mut chosen: Local<bool>,
+    mut clicked: Local<bool>,
     mut pressed: Local<bool>,
     mut text_query: Query<&mut Text, With<InputText>>,
     mut interaction_query: Query<
@@ -175,6 +176,7 @@ pub fn init_ms(
     button_text_entity_query: Query<Entity, With<Text>>,
 ) {
     let mut input_text;
+    // println!("omg!!! {}", *chosen);
 
     if !*chosen {
         for mut text in &mut text_query {
@@ -190,10 +192,14 @@ pub fn init_ms(
                 match *interaction {
                     Interaction::Clicked => {
                         *color = PRESSED_BUTTON.into();
-                        *pressed = true;
+                        *clicked = true;
                     }
                     Interaction::Hovered => {
                         *color = HOVERED_BUTTON.into();
+                        if *clicked {
+                            *pressed = true;
+                            *clicked = false;
+                        }
                     }
                     Interaction::None => {
                         *color = NORMAL_BUTTON.into();
@@ -209,16 +215,19 @@ pub fn init_ms(
                 // change state and 
                 match (*input_text).trim().parse::<isize>() {
                     Ok(ms_size) => {
-                        if ms_size > 0 {
+                        if ms_size > 1 {
                             input_text.clear();
                             // change info of ms_info
                             *ms_info = MSInfo {
                                 width: ms_size as usize,
                                 height: ms_size as usize,
-                                bombs: (ms_size * ms_size / 10) as usize,
+                                bombs: max(1, ms_size * ms_size / 10) as usize,
                             };
                             *chosen = true;
-                    }
+                            // println!("bruh");
+                        } else {
+                            println!("Invalid number!"); // TODO make err graphical
+                        }
                     },
                     _ => {
                         println!("Wrong input!"); // TODO make err graphical
@@ -229,6 +238,9 @@ pub fn init_ms(
     }
 
     if *chosen {
+        *chosen = false;
+        *pressed = false;
+
         for e in button_text_entity_query.iter() {
             c.entity(e).despawn();
         }
@@ -251,7 +263,7 @@ pub fn init_ms(
             .insert(MS);
         }
 
-        state.overwrite_set(GameState::Playing).unwrap();
+        state.set(GameState::Playing).unwrap();
     }
 }
 
@@ -268,106 +280,110 @@ pub fn run_ms(
     mut cursor_position: Local<Vec2>,
     mut sprites: Query<(&mut Sprite, &mut Transform, &mut Handle<Image>), With<MS>>,
 ) {
-        if !*second_frame {
-            *ms = Minesweeper::new(ms_info.width, ms_info.height, ms_info.bombs);
-            *second_frame = true;
+    if !*second_frame {
+        *ms = Minesweeper::new(ms_info.width, ms_info.height, ms_info.bombs);
+        *second_frame = true;
+        for (mut s, mut _p, mut _i) in &mut sprites{
+            s.color = Color::rgb(1., 1., 1.);
         }
+        return;
+    }
 
-        let window = windows.get_primary().unwrap();
-        let grid_max = max(ms.width, ms.height) as f32;
-        // let grid_min = min(ms.width, ms.height) as f32;
-        let wind_min = f32::min(window.width(), window.height());
-        
-        let size = wind_min / (grid_max + 1.);
-        let size_vec = Some(Vec2::new(
-            size,
-            size
-        ));
+    let window = windows.get_primary().unwrap();
+    let grid_max = max(ms.width, ms.height) as f32;
+    // let grid_min = min(ms.width, ms.height) as f32;
+    let wind_min = f32::min(window.width(), window.height());
 
-        let pad_x = size/2.;
-        let pad_y = size/2.;
+    let size = wind_min / (grid_max + 1.);
+    let size_vec = Some(Vec2::new(
+        size,
+        size
+    ));
 
-        if let Some(moved_cursor) = cursor_moved.iter().last() {
-            *cursor_position = moved_cursor.position;    
-        }
+    let pad_x = size/2.;
+    let pad_y = size/2.;
 
-        let left_click = mouse_button_input.just_released(MouseButton::Left);
-        let right_click = mouse_button_input.just_released(MouseButton::Right);
+    if let Some(moved_cursor) = cursor_moved.iter().last() {
+        *cursor_position = moved_cursor.position;    
+    }
 
-        let mx = cursor_position.x;
-        let my = cursor_position.y;
+    let left_click = mouse_button_input.just_released(MouseButton::Left);
+    let right_click = mouse_button_input.just_released(MouseButton::Right);
 
-        let mut ind = 0;
-        for (mut s, mut p, mut i) in sprites.iter_mut() {
-            // let mut last_i = &i;
-            let x = ind % ms.width;
-            let y = ind / ms.width;
+    let mx = cursor_position.x;
+    let my = cursor_position.y;
 
-            let tx = pad_x + (x as f32 - ms.width as f32  / 2.) * size;
-            let ty = pad_y + (y as f32 - ms.height as f32 / 2.) * size;
+    let mut ind = 0;
+    for (mut s, mut p, mut i) in &mut sprites {
+        let x = ind % ms.width;
+        let y = ind / ms.width;
 
-            let trans = Transform {
-                translation: Vec3::new(
-                    tx,
-                    ty,
-                    0.0
-                    ),
-                ..Default::default()
-            };
+        let tx = pad_x + (x as f32 - ms.width as f32  / 2.) * size;
+        let ty = pad_y + (y as f32 - ms.height as f32 / 2.) * size;
 
-            *p = trans;
-            let collision_trans = Transform {
-                translation: Vec3::new(
-                    tx + window.width()/2.,
-                    ty + window.height()/2.,
-                    0.0
-                    ),
-                ..Default::default()
-            };
+        let trans = Transform {
+            translation: Vec3::new(
+                tx,
+                ty,
+                0.0
+                ),
+            ..Default::default()
+        };
 
-            if let Some(collision) = collide(
-                collision_trans.translation,
-                size_vec.unwrap(),
-                Vec3::new(mx, my, 0.),
-                Vec2::new(1.0, 1.0)
-            ) {
-                if collision == Collision::Inside {
-                    if left_click {
-                        ms.open(x, y);
-                    } else if right_click {
-                        ms.flag(x, y);
-                        if ms.grid[y][x].flag {
-                            *i = gr.imgs.get("flag").unwrap().clone();
-                        } else {
-                            *i = gr.imgs.get("cell").unwrap().clone();
-                        }
+        *p = trans;
+        let collision_trans = Transform {
+            translation: Vec3::new(
+                tx + window.width()/2.,
+                ty + window.height()/2.,
+                0.0
+                ),
+            ..Default::default()
+        };
+
+        if let Some(collision) = collide(
+            collision_trans.translation,
+            size_vec.unwrap(),
+            Vec3::new(mx, my, 0.),
+            Vec2::new(1.0, 1.0)
+        ) {
+            if collision == Collision::Inside {
+                if left_click {
+                    ms.open(x, y);
+                } else if right_click {
+                    ms.flag(x, y);
+                    if ms.grid[y][x].flag {
+                        *i = gr.imgs.get("flag").unwrap().clone();
                     } else {
-                        s.color = Color::rgb(0.8, 0.8, 0.8)
+                        *i = gr.imgs.get("cell").unwrap().clone();
                     }
-                }
-            } else {
-                s.color = Color::rgb(1.0, 1.0, 1.0)
-            }
-
-            s.custom_size = size_vec;
-
-            if ms.grid[y][x].flag {
-                *i = gr.imgs.get("flag").unwrap().clone();
-            } else if ms.grid[y][x].revealed {
-                if ms.grid[y][x].bomb {
-                    *i = gr.imgs.get("bomb").unwrap().clone();
-                    state.overwrite_set(GameState::Endgame).unwrap();
                 } else {
-                    let surr = ms.grid[y][x].surrounds;
-                    if surr == 0 {
-                        *i = gr.imgs.get("open_cell").unwrap().clone();
-                    } else {
-                        *i = gr.imgs.get(&surr.to_string()).unwrap().clone();
-                    }
+                    s.color = Color::rgb(0.8, 0.8, 0.8)
                 }
             }
-            ind += 1;
+        } else {
+            s.color = Color::rgb(1.0, 1.0, 1.0)
         }
+
+        s.custom_size = size_vec;
+
+        if ms.grid[y][x].flag {
+            *i = gr.imgs.get("flag").unwrap().clone();
+        } else if ms.grid[y][x].revealed {
+            if ms.grid[y][x].bomb {
+                *i = gr.imgs.get("bomb").unwrap().clone();
+                *second_frame = false;
+                state.set(GameState::Endgame).unwrap();
+            } else {
+                let surr = ms.grid[y][x].surrounds;
+                if surr == 0 {
+                    *i = gr.imgs.get("open_cell").unwrap().clone();
+                } else {
+                    *i = gr.imgs.get(&surr.to_string()).unwrap().clone();
+                }
+            }
+        }
+        ind += 1;
+    }
 }
 
 pub fn endgame_init(
@@ -432,16 +448,24 @@ pub fn endgame_init(
 
 pub fn endgame(
     windows: Res<Windows>,
-    // mut interaction_query: Query<
-    //     (&Interaction, &mut BackgroundColor, &Children),
-    //     (Changed<Interaction>, With<Button>),
-    // >,
-    mut text_query: Query<(&mut Text, &mut Transform), Without<Button>>,
+    mut c: Commands,
+    mut state: ResMut<State<GameState>>,
+    mut interaction_query: Query<
+        (&Interaction, &mut BackgroundColor),
+        (Changed<Interaction>, With<Button>),
+    >,
+    mut text_query: Query<(&Text, &mut Transform), Without<Button>>,
+    mut clicked: Local<bool>,
+    mut pressed: Local<bool>,
+    ms_entity_query: Query<Entity, With<MS>>,
+    button_entity_query: Query<Entity, With<Button>>,
+    text_entity_query: Query<Entity, With<Text>>,
 ) {
     let window = windows.get_primary().unwrap();
-    let (w, h) = (window.width(), window.height());
+    let (_w, h) = (window.width(), window.height());
 
-    for (mut _game_over_text, mut game_over_transform) in text_query.iter_mut() {
+    // adjust position of "game over" text
+    for (_game_over_text, mut game_over_transform) in text_query.iter_mut() {
         *game_over_transform = Transform {
             translation: Vec3 {
                 x: 0.,
@@ -452,5 +476,38 @@ pub fn endgame(
         }
     }
 
+    for (interaction, mut color) in &mut interaction_query {
+        match *interaction {
+            Interaction::Clicked => {
+                *color = PRESSED_BUTTON.into();
+                *clicked = true;
+            }
+            Interaction::Hovered => {
+                *color = HOVERED_BUTTON.into();
+                if *clicked {
+                    *pressed = true;
+                    *clicked = false;
+                }
+            }
+            Interaction::None => {
+                *color = NORMAL_BUTTON.into();
+            }
+        }
+    }
 
+    if *pressed {
+        *pressed = false;
+
+        for e in ms_entity_query.iter() {
+            c.entity(e).despawn();
+        }
+        for e in text_entity_query.iter() {
+            c.entity(e).despawn();
+        }
+        for e in button_entity_query.iter() {
+            c.entity(e).despawn();
+        }
+
+        state.set(GameState::Intro).unwrap();
+    }
 }
