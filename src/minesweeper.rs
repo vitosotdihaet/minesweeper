@@ -107,7 +107,7 @@ impl Minesweeper {
 
         for dx in -1..=1 {
             for dy in -1..=1 {
-                if dx == dy || dx == -dy {
+                if dx == 0 && dy == 0 {
                     continue;
                 }
 
