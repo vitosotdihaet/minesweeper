@@ -22,10 +22,12 @@ impl Default for Cell {
 }
 
 pub struct Minesweeper {
-    pub playing: bool,
-    pub grid:    Vec<Vec<Cell>>,
-    pub width:   usize,
-    pub height:  usize,
+    pub playing:  bool,
+    pub grid:     Vec<Vec<Cell>>,
+    pub width:    usize,
+    pub height:   usize,
+    first_move:   bool,
+    num_of_mines: usize,
 }
 
 impl Default for Minesweeper {
@@ -37,40 +39,41 @@ impl Default for Minesweeper {
 impl Minesweeper {
     pub fn new(width: usize, height: usize, number_of_mines: usize) -> Self {
         let playing = true;
-        let mut grid = vec![vec![Cell::default(); width]; height];
+        let grid = vec![vec![Cell::default(); width]; height];
+        Minesweeper {playing, grid, width, height, first_move: false, num_of_mines: number_of_mines}
+    }
 
-        let mut rng = rand::thread_rng();
-        let mut bombs: Vec<(usize, usize)> = vec![];
-        for x in 0..width {
-            for y in 0..height {
-                bombs.push((x, y));
+    pub fn open(&mut self, x: usize, y: usize) {
+        if self.first_move {
+            let mut rng = rand::thread_rng();
+            let mut bombs: Vec<(usize, usize)> = vec![];
+            for x in 0..self.width {
+                for y in 0..self.height {
+                    bombs.push((x, y));
+                }
             }
-        }
 
-        for (cx, cy) in bombs.choose_multiple(&mut rng, number_of_mines) { // TODO remake random generator to prevent from failing on the first move
-            let (x, y) = (*cx, *cy);
-            grid[y][x].bomb = true;
-
-            for dx in -1..=1 {
-                for dy in -1..=1 {
-                    if dx == 0 && dy == 0 {
-                        continue;
-                    }
-
-                    let nx = x as isize + dx;
-                    let ny = y as isize + dy;
-
-                    if width as isize > nx && nx >= 0 && height as isize > ny && ny >= 0 {
-                        grid[ny as usize][nx as usize].surrounds += 1;
+            for (cx, cy) in bombs.choose_multiple(&mut rng, self.num_of_mines) { // TODO remake random generator to prevent from failing on the first move
+                let (x, y) = (*cx, *cy);
+                self.grid[y][x].bomb = true;
+    
+                for dx in -1..=1 {
+                    for dy in -1..=1 {
+                        if dx == 0 && dy == 0 {
+                            continue;
+                        }
+    
+                        let nx = x as isize + dx;
+                        let ny = y as isize + dy;
+    
+                        if self.width as isize > nx && nx >= 0 && self.height as isize > ny && ny >= 0 {
+                            self.grid[ny as usize][nx as usize].surrounds += 1;
+                        }
                     }
                 }
             }
         }
 
-        Minesweeper {playing, grid, width, height}
-    }
-
-    pub fn open(&mut self, x: usize, y: usize) {
         if !self.grid[y][x].flag && self.playing {
             match self.grid[y][x].bomb {
                 true => {
