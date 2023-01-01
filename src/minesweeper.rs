@@ -40,16 +40,17 @@ impl Minesweeper {
     pub fn new(width: usize, height: usize, number_of_mines: usize) -> Self {
         let playing = true;
         let grid = vec![vec![Cell::default(); width]; height];
-        Minesweeper {playing, grid, width, height, first_move: false, num_of_mines: number_of_mines}
+        Minesweeper {playing, grid, width, height, first_move: true, num_of_mines: number_of_mines}
     }
 
     pub fn open(&mut self, x: usize, y: usize) {
         if self.first_move {
             let mut rng = rand::thread_rng();
             let mut bombs: Vec<(usize, usize)> = vec![];
-            for x in 0..self.width {
-                for y in 0..self.height {
-                    bombs.push((x, y));
+            for cx in 0..self.width {
+                for cy in 0..self.height {
+                    if cx == x && cy == y { continue; }
+                    bombs.push((cx, cy));
                 }
             }
 
@@ -72,6 +73,7 @@ impl Minesweeper {
                     }
                 }
             }
+            self.first_move = false;
         }
 
         if !self.grid[y][x].flag && self.playing {
