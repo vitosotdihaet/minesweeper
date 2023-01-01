@@ -1,4 +1,4 @@
-use rand::Rng;
+use rand::{Rng, seq::SliceRandom};
 use std::{io, cmp::max};
 
 const BOMB_COUNT: &[&'static str] = &["0️", "1️", "2️", "3️", "4️", "5️", "6️", "7️", "8️"];
@@ -41,29 +41,31 @@ impl Minesweeper {
         let mut bombs = vec![];
 
         let mut rng = rand::thread_rng();
-        let mut count = 0;
+        let mut xs: Vec<usize> = (0..width).collect();
+        let mut ys: Vec<usize> = (0..height).collect();
+        xs.shuffle(&mut rng);
+        ys.shuffle(&mut rng);
+        println!("{:?} {:?}", xs, ys);
 
-        while count != number_of_mines { // TODO remake random generator to prevent from failing on the first move
-            let y = rng.gen_range(0..height);
-            let x = rng.gen_range(0..width);
+        for i in 0..number_of_mines { // TODO remake random generator to prevent from failing on the first move
+            let x = xs[i];
+            let y = ys[i];
+            println!("{}, {}", x, y);
 
-            if grid[y][x].bomb == false {
-                grid[y][x].bomb = true;
-                bombs.push((x, y));
-                count += 1;
+            grid[y][x].bomb = true;
+            bombs.push((x, y));
 
-                for dx in -1..=1 {
-                    for dy in -1..=1 {
-                        if dx == 0 && dy == 0 {
-                            continue;
-                        }
+            for dx in -1..=1 {
+                for dy in -1..=1 {
+                    if dx == 0 && dy == 0 {
+                        continue;
+                    }
 
-                        let nx = x as isize + dx;
-                        let ny = y as isize + dy;
+                    let nx = x as isize + dx;
+                    let ny = y as isize + dy;
 
-                        if width as isize > nx && nx >= 0 && height as isize > ny && ny >= 0 {
-                            grid[ny as usize][nx as usize].surrounds += 1;
-                        }
+                    if width as isize > nx && nx >= 0 && height as isize > ny && ny >= 0 {
+                        grid[ny as usize][nx as usize].surrounds += 1;
                     }
                 }
             }
