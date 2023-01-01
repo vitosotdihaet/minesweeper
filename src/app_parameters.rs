@@ -163,7 +163,6 @@ pub fn init(
             }
         ));
     });
-    // println!("intro!");
 }
 
 pub fn init_ms(
@@ -233,7 +232,6 @@ pub fn init_ms(
                                 bombs: max(1, ms_size * ms_size / 10) as usize,
                             };
                             *chosen = true;
-                            // println!("bruh");
                         } else {
                             println!("Invalid number!"); // TODO make err graphical
                         }
@@ -386,9 +384,7 @@ pub fn run_ms(
         s.custom_size = size_vec;
 
         // change sprite
-        if ms.grid[y][x].flag {
-            *i = gr.imgs.get("flag").unwrap().clone();
-        } else if ms.grid[y][x].revealed {
+        if ms.grid[y][x].revealed {
             if ms.grid[y][x].bomb {
                 *i = gr.imgs.get("bomb").unwrap().clone();
                 *second_frame = false;
