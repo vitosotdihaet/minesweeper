@@ -26,6 +26,12 @@ pub struct MSInfo {
     bombs: usize,
 }
 
+#[derive(Resource)]
+pub struct GameRes {
+    font: Handle<Font>,
+    imgs: HashMap<String, Handle<Image>>,
+}
+
 #[derive(Resource, Clone, Copy, Default, Debug)]
 pub struct GameWon {
     value: bool, 
@@ -42,12 +48,6 @@ pub enum GameState {
     Intro,
     Playing,
     Endgame,
-}
-
-#[derive(Resource)]
-pub struct GameRes {
-    font: Handle<Font>,
-    imgs: HashMap<String, Handle<Image>>,
 }
 
 pub fn startup(
