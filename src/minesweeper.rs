@@ -1,4 +1,4 @@
-use rand::{Rng, seq::SliceRandom};
+use rand::seq::SliceRandom;
 use std::{io, cmp::max};
 
 const BOMB_COUNT: &[&'static str] = &["0️", "1️", "2️", "3️", "4️", "5️", "6️", "7️", "8️"];
@@ -38,22 +38,18 @@ impl Minesweeper {
     pub fn new(width: usize, height: usize, number_of_mines: usize) -> Self {
         let playing = true;
         let mut grid = vec![vec![Cell::default(); width]; height];
-        let mut bombs = vec![];
 
         let mut rng = rand::thread_rng();
-        let mut xs: Vec<usize> = (0..width).collect();
-        let mut ys: Vec<usize> = (0..height).collect();
-        xs.shuffle(&mut rng);
-        ys.shuffle(&mut rng);
-        println!("{:?} {:?}", xs, ys);
+        let mut bombs: Vec<(usize, usize)> = vec![];
+        for x in 0..width {
+            for y in 0..height {
+                bombs.push((x, y));
+            }
+        }
 
-        for i in 0..number_of_mines { // TODO remake random generator to prevent from failing on the first move
-            let x = xs[i];
-            let y = ys[i];
-            println!("{}, {}", x, y);
-
+        for (cx, cy) in bombs.choose_multiple(&mut rng, number_of_mines) { // TODO remake random generator to prevent from failing on the first move
+            let (x, y) = (*cx, *cy);
             grid[y][x].bomb = true;
-            bombs.push((x, y));
 
             for dx in -1..=1 {
                 for dy in -1..=1 {
