@@ -183,12 +183,9 @@ pub fn init_ms(
     button_entity_query: Query<Entity, With<Button>>,
     button_text_entity_query: Query<Entity, With<Text>>,
 ) {
-    let mut input_text;
-    // println!("omg!!! {}", *chosen);
-
     if !*chosen {
         for mut text in &mut text_query {
-            input_text = &mut (*text).sections[0].value;
+            let input_text = &mut (*text).sections[0].value;
 
             for ev in char_evr.iter() {
                 if '0' <= ev.char && ev.char <= '9' { 
@@ -220,7 +217,8 @@ pub fn init_ms(
                     input_text.pop();
                 }
             } else if keys.just_pressed(KeyCode::Return) || *pressed {
-                // change state and 
+                *pressed = false;
+                // handle typed number
                 match (*input_text).trim().parse::<isize>() {
                     Ok(ms_size) => {
                         if ms_size > 1 {
@@ -367,7 +365,9 @@ pub fn run_ms(
                 if left_click {
                     ms.open(x, y);
                 } else if right_click {
-                    ms.flag(x, y);
+                    if !ms.grid[y][x].revealed {
+                        ms.flag(x, y);
+                    }
                     if ms.grid[y][x].flag {
                         *i = gr.imgs.get("flag").unwrap().clone();
                     } else {
@@ -408,18 +408,19 @@ pub fn run_ms(
     }
 
     if !*second_frame {
-        let mut ind = 0;
-        for (mut _s, mut _p, mut i) in &mut sprites {
-            let x = ind % ms.width;
-            let y = ind / ms.width;
+        if !game_won.value {
+            let mut ind = 0;
+            for (mut _s, mut _p, mut i) in &mut sprites {
+                let x = ind % ms.width;
+                let y = ind / ms.width;
 
-            if ms.grid[y][x].bomb {
-                *i = gr.imgs.get("bomb").unwrap().clone();
+                if ms.grid[y][x].bomb {
+                    *i = gr.imgs.get("bomb").unwrap().clone();
+                }
+
+                ind += 1;
             }
-
-            ind += 1;
         }
-
         state.set(GameState::Endgame).unwrap();
     }
 }
