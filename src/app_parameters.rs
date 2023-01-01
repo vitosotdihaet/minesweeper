@@ -1,9 +1,13 @@
-pub use bevy::{window::close_on_esc, prelude::*, render::{
-    render_resource::SamplerDescriptor, 
-    texture::ImageSampler
-}};
+pub use bevy::{
+    prelude::*,
+    window::close_on_esc,
+    render::{
+        render_resource::SamplerDescriptor,
+        texture::ImageSampler
+    }
+};
 
-use bevy::{sprite::collide_aabb::{Collision, collide}};
+use bevy::sprite::collide_aabb::{Collision, collide};
 use std::{path::Path, cmp::max, collections::HashMap};
 
 use crate::minesweeper::*;
@@ -325,7 +329,6 @@ pub fn run_ms(
     for (mut s, mut p, mut i) in &mut sprites {
         let x = ind % ms.width;
         let y = ind / ms.width;
-
 
         if ms.grid[y][x].bomb && ms.grid[y][x].flag {
             flagged_bombs += 1;
