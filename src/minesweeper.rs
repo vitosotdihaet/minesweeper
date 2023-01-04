@@ -54,7 +54,7 @@ impl Minesweeper {
                 }
             }
 
-            for (cx, cy) in bombs.choose_multiple(&mut rng, self.num_of_mines) { // TODO remake random generator to prevent from failing on the first move
+            for (cx, cy) in bombs.choose_multiple(&mut rng, self.num_of_mines) {
                 let (x, y) = (*cx, *cy);
                 self.grid[y][x].bomb = true;
     
