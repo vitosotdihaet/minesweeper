@@ -17,7 +17,8 @@ impl Default for Cell {
             surrounds: 0,
             bomb: false,
             flag: false,
-            revealed: false }
+            revealed: false
+        }
     }
 }
 
@@ -241,8 +242,6 @@ impl Minesweeper {
             }
             println!();
         }
-
         println!();
     }
-
 }
