@@ -185,7 +185,7 @@ pub fn init_ms(
 ) {
     if !*chosen {
         for mut text in &mut text_query {
-            let input_text = &mut (*text).sections[0].value;
+            let input_text = &mut text.sections[0].value;
 
             for ev in char_evr.iter() {
                 if '0' <= ev.char && ev.char <= '9' { 
@@ -213,7 +213,7 @@ pub fn init_ms(
             }
 
             if keys.just_pressed(KeyCode::Back) {
-                if input_text.len() > 0 {
+                if !input_text.is_empty() {
                     input_text.pop();
                 }
             } else if keys.just_pressed(KeyCode::Return) || *pressed {
@@ -319,10 +319,9 @@ pub fn run_ms(
     let mx = cursor_position.x;
     let my = cursor_position.y;
 
-    let mut ind = 0;
     let mut flagged_bombs = 0;
     let mut revealed = 0;
-    for (mut s, mut p, mut i) in &mut sprites {
+    for (ind, (mut s, mut p, mut i)) in (&mut sprites).into_iter().enumerate() {
         let x = ind % ms.width;
         let y = ind / ms.width;
 
@@ -403,22 +402,17 @@ pub fn run_ms(
             *second_frame = false;
             game_won.value = true;
         }
-
-        ind += 1;
     }
 
     if !*second_frame {
         if !game_won.value {
-            let mut ind = 0;
-            for (mut _s, mut _p, mut i) in &mut sprites {
+            for (ind, (mut _s, mut _p, mut i)) in (&mut sprites).into_iter().enumerate() {
                 let x = ind % ms.width;
                 let y = ind / ms.width;
 
                 if ms.grid[y][x].bomb {
                     *i = gr.imgs.get("bomb").unwrap().clone();
                 }
-
-                ind += 1;
             }
         }
         state.set(GameState::Endgame).unwrap();

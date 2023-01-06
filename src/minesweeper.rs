@@ -1,25 +1,14 @@
 use rand::seq::SliceRandom;
 use std::{io, cmp::max};
 
-const BOMB_COUNT: &[&'static str] = &["0️", "1️", "2️", "3️", "4️", "5️", "6️", "7️", "8️"];
+const BOMB_COUNT: &[&str] = &["0️", "1️", "2️", "3️", "4️", "5️", "6️", "7️", "8️"];
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Default)]
 pub struct Cell {
     pub surrounds: u8,
     pub bomb: bool,
     pub flag: bool,
     pub revealed: bool
-}
-
-impl Default for Cell {
-    fn default() -> Self {
-        Cell { 
-            surrounds: 0,
-            bomb: false,
-            flag: false,
-            revealed: false
-        }
-    }
 }
 
 pub struct Minesweeper {
@@ -101,7 +90,7 @@ impl Minesweeper {
     }
 
     fn open_empty(&mut self, x: usize, y: usize) {
-        if self.grid[y][x].revealed == true {
+        if self.grid[y][x].revealed {
             return;
         }
         if self.grid[y][x].surrounds != 0 {
@@ -219,7 +208,7 @@ impl Minesweeper {
 
         let mut to_print = "#".to_owned() + &" ".repeat(max(0, h_length as isize - w_length as isize + 1) as usize);
         for n in 0..self.width { 
-            to_print += &((" ".repeat(w_length - (n + 1).to_string().len() + 1) + &(n + 1).to_string()));
+            to_print += &(" ".repeat(w_length - (n + 1).to_string().len() + 1) + &(n + 1).to_string());
         }
         println!("{}", to_print);
         println!("{}{}", " ".repeat(h_length + 1), "_".repeat(to_print.len() - h_length - 1));
