@@ -328,7 +328,7 @@ pub fn run_ms(
 
     let mut flagged_bombs = 0;
     let mut revealed = 0;
-    for (ind, (mut s, mut p, mut i)) in (&mut sprites).into_iter().enumerate() {
+    for (ind, (mut s, mut t, mut i)) in (&mut sprites).into_iter().enumerate() {
         let x = ind % ms.width;
         let y = ind / ms.width;
 
@@ -350,8 +350,8 @@ pub fn run_ms(
                 ),
             ..Default::default()
         };
+        *t = trans;
 
-        *p = trans;
         let collision_trans = Transform {
             translation: Vec3::new(
                 tx + window.width()/2.,
