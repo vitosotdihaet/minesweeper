@@ -18,7 +18,7 @@ fn main() {
             window: windows_info,
             ..Default::default()
         })
-        .set( ImagePlugin {
+        .set(ImagePlugin {
             default_sampler: ImageSampler::nearest_descriptor(),
         }))
         .add_system(close_on_esc)
