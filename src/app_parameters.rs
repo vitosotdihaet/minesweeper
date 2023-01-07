@@ -7,8 +7,15 @@ pub use bevy::{
     }
 };
 
-use bevy::sprite::collide_aabb::{Collision, collide};
-use std::{path::Path, cmp::max, collections::HashMap};
+use bevy::sprite::collide_aabb::{
+    Collision,
+    collide
+};
+use std::{
+    path::Path,
+    cmp::max,
+    collections::HashMap
+};
 
 use crate::minesweeper::*;
 
