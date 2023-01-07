@@ -496,6 +496,7 @@ pub fn endgame_init(
 
 pub fn endgame(
     windows: Res<Windows>,
+    ms_info: Res<MSInfo>,
     mut c: Commands,
     mut state: ResMut<State<GameState>>,
     mut text_query: Query<(&Text, &mut Transform), Without<Button>>,
@@ -505,12 +506,47 @@ pub fn endgame(
         (&Interaction, &mut BackgroundColor),
         (Changed<Interaction>, With<Button>),
     >,
-    ms_entity_query: Query<Entity, With<MS>>,
+    mut ms_query: Query<
+        (Entity, &mut Sprite, &mut Transform),
+        (With<MS>, Without<Button>, Without<Text>),
+    >,
     button_entity_query: Query<Entity, With<Button>>,
     text_entity_query: Query<Entity, With<Text>>,
 ) {
     let window = windows.get_primary().unwrap();
-    let (_w, h) = (window.width(), window.height());
+    let (w, h) = (window.width(), window.height());
+
+    let grid_max = max(ms_info.width, ms_info.height) as f32;
+    // let grid_min = min(ms.width, ms.height) as f32;
+    let wind_min = f32::min(w, h);
+
+    let size = wind_min / (grid_max + 1.);
+    let size_vec = Some(Vec2::new(
+        size,
+        size
+    ));
+
+    let pad_x = size/2.;
+    let pad_y = size/2.;
+
+    for (ind, (_e, mut s, mut t)) in (&mut ms_query).into_iter().enumerate() {
+        let x = ind % ms_info.width;
+        let y = ind / ms_info.width;
+
+        let tx = pad_x + (x as f32 - ms_info.width as f32  / 2.) * size;
+        let ty = pad_y + (y as f32 - ms_info.height as f32 / 2.) * size;
+
+        let trans = Transform {
+            translation: Vec3::new(
+                tx,
+                ty,
+                0.0
+                ),
+            ..Default::default()
+        };
+        *t = trans;
+        s.custom_size = size_vec;
+    }
 
     // adjust position of "game over" text
     for (_game_over_text, mut game_over_transform) in text_query.iter_mut() {
@@ -546,7 +582,7 @@ pub fn endgame(
     if *pressed {
         *pressed = false;
 
-        for e in ms_entity_query.iter() {
+        for (e, _s, _t) in ms_query.iter() {
             c.entity(e).despawn();
         }
         for e in text_entity_query.iter() {
