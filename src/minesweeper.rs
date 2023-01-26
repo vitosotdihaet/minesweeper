@@ -1,23 +1,26 @@
 use rand::seq::SliceRandom;
-use std::{io, cmp::max};
+use std::cmp::max;
 
-const BOMB_COUNT: &[&str] = &["0️", "1️", "2️", "3️", "4️", "5️", "6️", "7️", "8️"];
+const MINE_COUNT: &'static [usize] = &[0, 1, 2, 3, 4, 5, 6, 7, 8];
 
 #[derive(Clone, Copy, Default)]
 pub struct Cell {
     pub surrounds: u8,
-    pub bomb: bool,
+    pub mine: bool,
     pub flag: bool,
-    pub revealed: bool
+    pub revealed: bool,
 }
 
 pub struct Minesweeper {
-    pub playing:  bool,
-    pub grid:     Vec<Vec<Cell>>,
-    pub width:    usize,
-    pub height:   usize,
-    first_move:   bool,
-    num_of_mines: usize,
+    pub playing: bool,
+    pub won: bool,
+    pub grid: Vec<Vec<Cell>>,
+    pub width: usize,
+    pub height: usize,
+    first_move: bool,
+    number_of_mines: usize,
+    number_of_revealed_cells: usize,
+    number_of_flagged_mines: usize,
 }
 
 impl Default for Minesweeper {
@@ -28,35 +31,45 @@ impl Default for Minesweeper {
 
 impl Minesweeper {
     pub fn new(width: usize, height: usize, number_of_mines: usize) -> Self {
-        let playing = true;
         let grid = vec![vec![Cell::default(); width]; height];
-        Minesweeper {playing, grid, width, height, first_move: true, num_of_mines: number_of_mines}
+        Minesweeper {
+            playing: true,
+            won: true,
+            grid,
+            width,
+            height,
+            first_move: true,
+            number_of_mines: number_of_mines,
+            number_of_revealed_cells: 0,
+            number_of_flagged_mines: 0,
+        }
     }
 
     pub fn open(&mut self, x: usize, y: usize) {
+        // generating a grid "after" the first move to prevent from failing
         if self.first_move {
             let mut rng = rand::thread_rng();
-            let mut bombs: Vec<(usize, usize)> = vec![];
+            let mut mines: Vec<(usize, usize)> = vec![];
             for cx in 0..self.width {
                 for cy in 0..self.height {
                     if cx == x && cy == y { continue; }
-                    bombs.push((cx, cy));
+                    mines.push((cx, cy));
                 }
             }
 
-            for (cx, cy) in bombs.choose_multiple(&mut rng, self.num_of_mines) {
+            for (cx, cy) in mines.choose_multiple(&mut rng, self.number_of_mines) {
                 let (x, y) = (*cx, *cy);
-                self.grid[y][x].bomb = true;
+                self.grid[y][x].mine = true;
     
                 for dx in -1..=1 {
                     for dy in -1..=1 {
                         if dx == 0 && dy == 0 {
                             continue;
                         }
-    
+
                         let nx = x as isize + dx;
                         let ny = y as isize + dy;
-    
+
                         if self.width as isize > nx && nx >= 0 && self.height as isize > ny && ny >= 0 {
                             self.grid[ny as usize][nx as usize].surrounds += 1;
                         }
@@ -67,33 +80,45 @@ impl Minesweeper {
         }
 
         if !self.grid[y][x].flag && self.playing {
-            match self.grid[y][x].bomb {
+            match self.grid[y][x].mine {
                 true => {
                     self.grid[y][x].revealed = true;
                     self.playing = false;
+                    self.won = false;
+                    return;
                 }
                 false => {
-                    if self.grid[y][x].surrounds != 0 {
-                        self.grid[y][x].revealed = true;
-                    } else {
-                        self.open_empty(x, y)
-                    }
+                    self.open_empty(x, y);
                 }
             }
+
+           self.check_for_win();        
         }
     }
 
     pub fn flag(&mut self, x: usize, y: usize) {
-        if self.playing {
-            self.grid[y][x].flag = !self.grid[y][x].flag;
+        if self.grid[y][x].revealed {
+            return;
         }
+
+        self.grid[y][x].flag = !self.grid[y][x].flag;
+
+        if self.grid[y][x].flag && self.grid[y][x].mine {
+            self.number_of_flagged_mines += 1;
+        } else if !self.grid[y][x].flag && self.grid[y][x].mine {
+            self.number_of_flagged_mines -= 1;
+        }
+
+        self.check_for_win();        
     }
 
     fn open_empty(&mut self, x: usize, y: usize) {
         if self.grid[y][x].revealed {
             return;
         }
+
         if self.grid[y][x].surrounds != 0 {
+            self.number_of_revealed_cells += 1;
             self.grid[y][x].revealed = true;
             return;
         }
@@ -108,6 +133,9 @@ impl Minesweeper {
                 let ny = y as isize + dy;
 
                 if self.width as isize > nx && nx >= 0 && self.height as isize > ny && ny >= 0 {
+                    if !self.grid[y][x].revealed {
+                        self.number_of_revealed_cells += 1;
+                    }
                     self.grid[y][x].revealed = true;
                     self.open_empty(nx as usize, ny as usize);
                 }
@@ -115,90 +143,10 @@ impl Minesweeper {
         }
     }
 
-    pub fn run(&mut self) {
-        let mut end = true;
-
-        for line in &self.grid {
-            for column in line {
-                if column.bomb {
-                    end = false;
-                    break;
-                }
-            }
-        }
-
-        if end {
+    fn check_for_win(&mut self) {
+        if self.width * self.height - self.number_of_revealed_cells == self.number_of_flagged_mines {
             self.playing = false;
-            return;
         }
-
-        self.input_a_turn();
-    }
-
-    pub fn input_a_turn(&mut self) {
-        println!("Left or Right click? (l/r): ");
-        let mut input_str = String::new();
-        io::stdin()
-            .read_line(&mut input_str)
-            .expect("Error reading line");
-        let click: &str = input_str.trim();
-
-        println!("Input x and y: ");
-        let mut input_str = String::new();
-        io::stdin()
-            .read_line(&mut input_str)
-            .expect("Error reading line");
-
-        let mut sub_str = input_str.split_whitespace();
-        let mut next_number = || -> usize {
-            sub_str
-                .next()
-                .expect("Not enough input values")
-                .parse()
-                .expect("Not a number")
-        };
-
-        let x = next_number() - 1;
-        let y = next_number() - 1;
-        if click == "L" || click == "l" {
-            self.open(x, y)
-        } else {
-            self.flag(x, y)
-        }
-    }
-
-    pub fn input_starting_info(&self) -> Minesweeper {
-        // width & height input
-        println!("Input width and height of Minesweeper grid: ");
-        let mut input_str = String::new();
-        io::stdin()
-            .read_line(&mut input_str)
-            .expect("Error reading line");
-    
-        let mut sub_str = input_str.split_whitespace();
-        let mut next_number = || -> usize {
-            sub_str
-                .next()
-                .expect("Not enough input values")
-                .parse()
-                .expect("Not a number")
-        };
-    
-        let width = next_number();
-        let height = next_number();
-    
-        // mines input
-        println!(
-            "Input number of mines (appropriate to this grid is {}): ",
-            width * height / 10
-        );
-        let mut input_str = String::new();
-        io::stdin()
-            .read_line(&mut input_str)
-            .expect("Error reading line");
-        let number_of_mines: usize = input_str.trim().parse().expect("Not a number");
-    
-        Minesweeper::new(width, height, number_of_mines)
     }
 
     pub fn print(&self) {
@@ -223,7 +171,7 @@ impl Minesweeper {
                 if self.grid[y][x].flag {
                     print!("🚩")
                 } else if self.grid[y][x].revealed {
-                    print!("{}", BOMB_COUNT[self.grid[y][x].surrounds as usize])
+                    print!("{}", MINE_COUNT[self.grid[y][x].surrounds as usize])
                 } else {
                     print!("?")
                 }

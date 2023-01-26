@@ -30,7 +30,7 @@ const PRESSED_BUTTON: Color = Color::rgb(0.3, 0.3, 0.3);
 pub struct MSInfo {
     width: usize,
     height: usize,
-    bombs: usize,
+    mines: usize,
 }
 
 #[derive(Resource)]
@@ -64,11 +64,11 @@ pub fn startup(
     c.spawn(Camera2dBundle::default());
 
     // Load all assets
-    let mut names = vec!["open_cell".to_owned()];
-    for i in 1..=8 {
+    let mut names = vec![];
+    for i in 0..=8 {
         names.push(i.to_string().to_owned());
     }
-    names.extend(vec!["bomb".to_owned(), "cell".to_owned(), "flag".to_owned()]);
+    names.extend(vec!["mine".to_owned(), "cell".to_owned(), "flag".to_owned()]);
 
     let mut imgs = HashMap::new();
     for e in names {
@@ -234,7 +234,7 @@ pub fn init_ms(
                             *ms_info = MSInfo {
                                 width: ms_size as usize,
                                 height: ms_size as usize,
-                                bombs: max(1, ms_size * ms_size / 10) as usize,
+                                mines: max(1, ms_size * ms_size / 10) as usize,
                             };
                             *chosen = true;
                         } else {
@@ -294,7 +294,7 @@ pub fn run_ms(
     mut sprites: Query<(&mut Sprite, &mut Transform, &mut Handle<Image>), With<MS>>,
 ) {
     if !*second_frame {
-        *ms = Minesweeper::new(ms_info.width, ms_info.height, ms_info.bombs);
+        *ms = Minesweeper::new(ms_info.width, ms_info.height, ms_info.mines);
         *second_frame = true;
         for (mut s, mut _p, mut _i) in &mut sprites{
             s.color = Color::rgb(1., 1., 1.);
@@ -326,18 +326,10 @@ pub fn run_ms(
     let mx = cursor_position.x;
     let my = cursor_position.y;
 
-    let mut flagged_bombs = 0;
-    let mut revealed = 0;
+    // main game loop
     for (ind, (mut s, mut t, mut i)) in (&mut sprites).into_iter().enumerate() {
         let x = ind % ms.width;
         let y = ind / ms.width;
-
-        if ms.grid[y][x].bomb && ms.grid[y][x].flag {
-            flagged_bombs += 1;
-        }
-        if ms.grid[y][x].revealed {
-            revealed += 1;
-        }
 
         let tx = pad_x + (x as f32 - ms.width as f32  / 2.) * size;
         let ty = pad_y + (y as f32 - ms.height as f32 / 2.) * size;
@@ -371,43 +363,35 @@ pub fn run_ms(
                 if left_click {
                     ms.open(x, y);
                 } else if right_click {
-                    if !ms.grid[y][x].revealed {
-                        ms.flag(x, y);
-                    }
+                    ms.flag(x, y);
                     if ms.grid[y][x].flag {
                         *i = gr.imgs.get("flag").unwrap().clone();
                     } else {
                         *i = gr.imgs.get("cell").unwrap().clone();
                     }
                 } else {
-                    s.color = Color::rgb(0.8, 0.8, 0.8)
+                    s.color = Color::rgb(0.8, 0.8, 0.8);
                 }
             }
         } else {
-            s.color = Color::rgb(1.0, 1.0, 1.0)
+            s.color = Color::rgb(1.0, 1.0, 1.0);
         }
 
         s.custom_size = size_vec;
 
         // change sprite
         if ms.grid[y][x].revealed {
-            if ms.grid[y][x].bomb {
-                *i = gr.imgs.get("bomb").unwrap().clone();
-                *second_frame = false;
-                game_won.value = false;
+            if ms.grid[y][x].mine {
+                *i = gr.imgs.get("mine").unwrap().clone();
             } else {
                 let surr = ms.grid[y][x].surrounds;
-                if surr == 0 {
-                    *i = gr.imgs.get("open_cell").unwrap().clone();
-                } else {
-                    *i = gr.imgs.get(&surr.to_string()).unwrap().clone();
-                }
+                *i = gr.imgs.get(&surr.to_string()).unwrap().clone();
             }
         }
-        
-        if ms_info.width * ms_info.height - revealed == flagged_bombs && flagged_bombs == ms_info.bombs {
+
+        if !ms.playing {
             *second_frame = false;
-            game_won.value = true;
+            game_won.value = ms.won;
         }
     }
 
@@ -417,8 +401,8 @@ pub fn run_ms(
                 let x = ind % ms.width;
                 let y = ind / ms.width;
 
-                if ms.grid[y][x].bomb {
-                    *i = gr.imgs.get("bomb").unwrap().clone();
+                if ms.grid[y][x].mine {
+                    *i = gr.imgs.get("mine").unwrap().clone();
                 }
             }
         }
