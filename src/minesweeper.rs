@@ -1,7 +1,7 @@
 use rand::seq::SliceRandom;
 use std::cmp::max;
 
-const MINE_COUNT: &'static [usize] = &[0, 1, 2, 3, 4, 5, 6, 7, 8];
+const MINE_COUNT: &[usize] = &[0, 1, 2, 3, 4, 5, 6, 7, 8];
 
 #[derive(Clone, Copy, Default)]
 pub struct Cell {
@@ -39,7 +39,7 @@ impl Minesweeper {
             width,
             height,
             first_move: true,
-            number_of_mines: number_of_mines,
+            number_of_mines,
             number_of_revealed_cells: 0,
             number_of_flagged_mines: 0,
         }
