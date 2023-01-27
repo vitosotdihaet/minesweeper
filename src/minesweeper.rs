@@ -46,36 +46,9 @@ impl Minesweeper {
     }
 
     pub fn open(&mut self, x: usize, y: usize) {
-        // generating a grid "after" the first move to prevent from failing
+        // generate a grid "after" the first move to prevent from failing
         if self.first_move {
-            let mut rng = rand::thread_rng();
-            let mut mines: Vec<(usize, usize)> = vec![];
-            for cx in 0..self.width {
-                for cy in 0..self.height {
-                    if cx == x && cy == y { continue; }
-                    mines.push((cx, cy));
-                }
-            }
-
-            for (cx, cy) in mines.choose_multiple(&mut rng, self.number_of_mines) {
-                let (x, y) = (*cx, *cy);
-                self.grid[y][x].mine = true;
-    
-                for dx in -1..=1 {
-                    for dy in -1..=1 {
-                        if dx == 0 && dy == 0 {
-                            continue;
-                        }
-
-                        let nx = x as isize + dx;
-                        let ny = y as isize + dy;
-
-                        if self.width as isize > nx && nx >= 0 && self.height as isize > ny && ny >= 0 {
-                            self.grid[ny as usize][nx as usize].surrounds += 1;
-                        }
-                    }
-                }
-            }
+            self.generate_grid(x, y);
             self.first_move = false;
         }
 
@@ -138,6 +111,38 @@ impl Minesweeper {
                     }
                     self.grid[y][x].revealed = true;
                     self.open_empty(nx as usize, ny as usize);
+                }
+            }
+        }
+    }
+
+    fn generate_grid(&mut self, x: usize, y: usize) {
+        let mut rng = rand::thread_rng();
+        let mut mines: Vec<(usize, usize)> = vec![];
+        for cx in 0..self.width {
+            for cy in 0..self.height {
+                if !(cx == x && cy == y) {
+                    mines.push((cx, cy));
+                }
+            }
+        }
+
+        for (cx, cy) in mines.choose_multiple(&mut rng, self.number_of_mines) {
+            let (x, y) = (*cx, *cy);
+            self.grid[y][x].mine = true;
+
+            for dx in -1..=1 {
+                for dy in -1..=1 {
+                    if dx == 0 && dy == 0 {
+                        continue;
+                    }
+
+                    let nx = x as isize + dx;
+                    let ny = y as isize + dy;
+
+                    if self.width as isize > nx && nx >= 0 && self.height as isize > ny && ny >= 0 {
+                        self.grid[ny as usize][nx as usize].surrounds += 1;
+                    }
                 }
             }
         }
