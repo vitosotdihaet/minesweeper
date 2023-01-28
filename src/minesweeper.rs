@@ -124,17 +124,10 @@ impl Minesweeper {
             let (x, y) = (*cx, *cy);
             self.grid[y][x].mine = true;
 
-            for dx in -1..=1 {
-                for dy in -1..=1 {
-                    if dx == 0 && dy == 0 {
-                        continue;
-                    }
-
-                    let nx = x as isize + dx;
-                    let ny = y as isize + dy;
-
-                    if self.width as isize > nx && nx >= 0 && self.height as isize > ny && ny >= 0 {
-                        self.grid[ny as usize][nx as usize].surrounds += 1;
+            for cx in max(0, x as isize - 1) as usize..=min(self.width - 1, x + 1) {
+                for cy in max(0, y as isize - 1) as usize..=min(self.height - 1, y + 1) {
+                    if !(cx == x && cy == y) {
+                        self.grid[cy][cx].surrounds += 1;
                     }
                 }
             }
