@@ -11,6 +11,7 @@ bevy = "0.9"
 
 [profile.dev]
 codegen-units = 1024
+opt-level = "z"
 
 [profile.release]
 codegen-units = 1
