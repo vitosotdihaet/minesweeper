@@ -1,5 +1,5 @@
 use rand::seq::SliceRandom;
-use std::cmp::max;
+use std::cmp::{min, max};
 
 const MINE_COUNT: &[usize] = &[0, 1, 2, 3, 4, 5, 6, 7, 8];
 
@@ -52,7 +52,7 @@ impl Minesweeper {
             self.first_move = false;
         }
 
-        if !self.grid[y][x].flag && self.playing {
+        if !self.grid[y][x].flag {
             match self.grid[y][x].mine {
                 true => {
                     self.grid[y][x].revealed = true;
@@ -64,7 +64,6 @@ impl Minesweeper {
                     self.open_empty(x, y);
                 }
             }
-
            self.check_for_win();        
         }
     }
@@ -96,21 +95,15 @@ impl Minesweeper {
             return;
         }
 
-        for dx in -1..=1 {
-            for dy in -1..=1 {
-                if dx == 0 && dy == 0 {
-                    continue;
-                }
+        if !self.grid[y][x].revealed {
+            self.number_of_revealed_cells += 1;
+        }
+        self.grid[y][x].revealed = true;
 
-                let nx = x as isize + dx;
-                let ny = y as isize + dy;
-
-                if self.width as isize > nx && nx >= 0 && self.height as isize > ny && ny >= 0 {
-                    if !self.grid[y][x].revealed {
-                        self.number_of_revealed_cells += 1;
-                    }
-                    self.grid[y][x].revealed = true;
-                    self.open_empty(nx as usize, ny as usize);
+        for cx in max(0, x as isize - 1) as usize..=min(self.width - 1, x + 1) {
+            for cy in max(0, y as isize - 1) as usize..=min(self.height - 1, y + 1) {
+                if !(cx == x && cy == y) {
+                    self.open_empty(cx, cy);
                 }
             }
         }
