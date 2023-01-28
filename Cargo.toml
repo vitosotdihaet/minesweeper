@@ -9,9 +9,11 @@ edition = "2021"
 rand = "0.8.4"
 bevy = "0.9"
 
+[profile.dev]
+codegen-units = 1024
+
 [profile.release]
 codegen-units = 1
 opt-level = "z"
-panic = "abort"
 strip = true
 lto = true
