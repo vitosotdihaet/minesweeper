@@ -1,5 +1,8 @@
 use rand::seq::SliceRandom;
-use std::cmp::{min, max};
+use std::{
+    cmp::{min, max},
+    fmt,
+};
 
 const MINE_COUNT: &[usize] = &[0, 1, 2, 3, 4, 5, 6, 7, 8];
 
@@ -26,6 +29,41 @@ pub struct Minesweeper {
 impl Default for Minesweeper {
     fn default() -> Self {
         Minesweeper::new(10, 10, 10)
+    }
+}
+
+impl fmt::Display for Minesweeper {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let mut fmt = String::new();
+        let w_length = self.width.to_string().len();
+        let h_length = self.height.to_string().len();
+
+        let mut to_print = "#".to_owned() + &" ".repeat(max(0, h_length as isize - w_length as isize + 1) as usize);
+        for n in 0..self.width { 
+            to_print += &(" ".repeat(w_length - (n + 1).to_string().len() + 1) + &(n + 1).to_string());
+        }
+        fmt.push_str(&to_print);
+        fmt.push('\n');
+        fmt.push_str(&" ".repeat(h_length + 1));
+        fmt.push_str(&"_".repeat(to_print.len() - h_length - 1));
+        fmt.push('\n');
+
+        for y in 0..self.height {
+            fmt.push_str(&((y + 1).to_string() + &" ".repeat(h_length - (y + 1).to_string().len() + 1) + "|"));
+
+            for x in 0..self.width {
+                if self.grid[y][x].flag {
+                    fmt.push_str("🚩");
+                } else if self.grid[y][x].revealed {
+                    fmt.push_str(&MINE_COUNT[self.grid[y][x].surrounds as usize].to_string());
+                } else {
+                    fmt.push_str("?");
+                }
+                fmt.push_str(&" ".repeat(w_length));
+            }
+            fmt.push('\n');
+        }
+        write!(f, "{}", fmt)
     }
 }
 
@@ -138,38 +176,5 @@ impl Minesweeper {
         if self.width * self.height - self.number_of_revealed_cells == self.number_of_flagged_mines {
             self.playing = false;
         }
-    }
-
-    pub fn print(&self) {
-        println!();
-        let w_length = self.width.to_string().len();
-        let h_length = self.height.to_string().len();
-
-        let mut to_print = "#".to_owned() + &" ".repeat(max(0, h_length as isize - w_length as isize + 1) as usize);
-        for n in 0..self.width { 
-            to_print += &(" ".repeat(w_length - (n + 1).to_string().len() + 1) + &(n + 1).to_string());
-        }
-        println!("{}", to_print);
-        println!("{}{}", " ".repeat(h_length + 1), "_".repeat(to_print.len() - h_length - 1));
-        
-        for y in 0..self.height {
-            print!(
-                "{}{}|", y + 1,
-                " ".repeat(h_length - (y + 1).to_string().len() + 1)
-            );
-            
-            for x in 0..self.width {
-                if self.grid[y][x].flag {
-                    print!("🚩")
-                } else if self.grid[y][x].revealed {
-                    print!("{}", MINE_COUNT[self.grid[y][x].surrounds as usize])
-                } else {
-                    print!("?")
-                }
-                print!("{}", " ".repeat(w_length))
-            }
-            println!();
-        }
-        println!();
     }
 }
