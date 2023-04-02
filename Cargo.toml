@@ -12,11 +12,12 @@ bevy = "0.10.1"
 # bevy = { version = "0.10.1", features = ["dynamic_linking"] }
 
 [profile.dev]
-codegen-units = 1024
-opt-level = "z"
+opt-level = 1
+
+[profile.dev.package."*"]
+opt-level = 3
 
 [profile.release]
-codegen-units = 1
-opt-level = "z"
-strip = true
-lto = true
+opt-level = 3
+lto = "fat"
+strip = true # Reduces binary size
