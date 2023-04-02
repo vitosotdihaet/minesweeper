@@ -7,7 +7,9 @@ edition = "2021"
 
 [dependencies]
 rand = "0.8.4"
-bevy = "0.9"
+bevy = "0.10.1"
+# ↓ Recommended when developing to increase build speed significantly
+# bevy = { version = "0.10.1", features = ["dynamic_linking"] }
 
 [profile.dev]
 codegen-units = 1024

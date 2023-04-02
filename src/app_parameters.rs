@@ -1,21 +1,15 @@
 pub use bevy::{
     prelude::*,
+    render::{render_resource::SamplerDescriptor, texture::ImageSampler},
     window::close_on_esc,
-    render::{
-        render_resource::SamplerDescriptor,
-        texture::ImageSampler
-    }
 };
 
-use bevy::sprite::collide_aabb::{
-    Collision,
-    collide
+use bevy::{
+    sprite::collide_aabb::{collide, Collision},
+    window::PrimaryWindow,
 };
-use std::{
-    path::Path,
-    cmp::max,
-    collections::HashMap
-};
+
+use std::{cmp::max, collections::HashMap, path::Path};
 
 use crate::minesweeper::*;
 
@@ -50,8 +44,9 @@ pub struct MS;
 #[derive(Component)]
 pub struct InputText;
 
-#[derive(Clone, PartialEq, Eq, Debug, Hash)]
+#[derive(Clone, PartialEq, Eq, Debug, Hash, States, Default)]
 pub enum GameState {
+    #[default]
     Intro,
     Playing,
     Endgame,
@@ -96,20 +91,18 @@ pub fn init(
                     color: Color::rgb(0.9, 0.9, 0.9),
                 },
             }],
-            alignment: TextAlignment {
-                vertical: VerticalAlign::Top,
-                horizontal: HorizontalAlign::Left,
-            },
+            alignment: TextAlignment::Center,
+            ..default()
         },
         transform: Transform {
             translation: Vec3 {
-                x: -225.,
+                x: 0.,
                 y: 225.,
                 z: 1.,
             },
-            ..Default::default()
+            ..default()
         },
-        ..Default::default()
+        ..default()
     });
 
     // spawn input text 
@@ -123,20 +116,18 @@ pub fn init(
                     color: Color::rgb(0.9, 0.9, 0.9),
                 },
             }],
-            alignment: TextAlignment {
-                vertical: VerticalAlign::Top,
-                horizontal: HorizontalAlign::Left,
-            },
+            alignment: TextAlignment::Center,
+            ..default()
         },
         transform: Transform {
             translation: Vec3 {
-                x: -225.,
+                x: 0.,
                 y: 175.,
                 z: 1.,
             },
-            ..Default::default()
+            ..default()
         },
-        ..Default::default()
+        ..default()
     })
     .insert(InputText);
 
@@ -147,7 +138,7 @@ pub fn init(
             margin: UiRect::all(Val::Auto),
             justify_content: JustifyContent::Center,
             align_items: AlignItems::Center,
-            ..Default::default()
+            ..default()
         },
         background_color: BackgroundColor::from(NORMAL_BUTTON),
         transform: Transform {
@@ -156,9 +147,9 @@ pub fn init(
                 y: 0.,
                 z: 1.
             },
-            ..Default::default()
+            ..default()
         },
-        ..Default::default()
+        ..default()
     })
     .with_children(|parent| {
         parent.spawn(TextBundle::from_section(
@@ -178,7 +169,7 @@ pub fn init_ms(
     mut c: Commands, 
     mut char_evr: EventReader<ReceivedCharacter>,
     mut ms_info: ResMut<MSInfo>,
-    mut state: ResMut<State<GameState>>,
+    mut state: ResMut<NextState<GameState>>,
     mut chosen: Local<bool>,
     mut clicked: Local<bool>,
     mut pressed: Local<bool>,
@@ -268,14 +259,14 @@ pub fn init_ms(
                 sprite: Sprite {
                     color: Color::Rgba{red: 1., green: 1., blue: 1., alpha: 1.},
                     custom_size: Some(Vec2::new(1., 1.)),
-                    ..Default::default()
+                    ..default()
                 },
-                ..Default::default()
+                ..default()
             })
             .insert(MS);
         }
 
-        state.overwrite_set(GameState::Playing).unwrap();
+        state.set(GameState::Playing);
     }
 }
 
@@ -284,8 +275,8 @@ pub fn run_ms(
     gr: Res<GameRes>,
     ms_info: Res<MSInfo>,
     mouse_button_input: Res<Input<MouseButton>>,
-    windows: Res<Windows>,
-    mut state: ResMut<State<GameState>>,
+    window_query: Query<&Window, With<PrimaryWindow>>,
+    mut state: ResMut<NextState<GameState>>,
     mut game_won: ResMut<GameWon>,
     mut cursor_moved: EventReader<CursorMoved>,
     mut ms: Local<Minesweeper>,
@@ -302,7 +293,10 @@ pub fn run_ms(
         return;
     }
 
-    let window = windows.get_primary().unwrap();
+    let Ok(window) = window_query.get_single() else {
+        return;
+    };
+
     let grid_max = max(ms.width, ms.height) as f32;
     // let grid_min = min(ms.width, ms.height) as f32;
     let wind_min = f32::min(window.width(), window.height());
@@ -340,7 +334,7 @@ pub fn run_ms(
                 ty,
                 0.0
                 ),
-            ..Default::default()
+            ..default()
         };
         *t = trans;
 
@@ -350,7 +344,7 @@ pub fn run_ms(
                 ty + window.height()/2.,
                 0.0
                 ),
-            ..Default::default()
+            ..default()
         };
 
         if let Some(collision) = collide(
@@ -406,7 +400,7 @@ pub fn run_ms(
                 }
             }
         }
-        state.set(GameState::Endgame).unwrap();
+        state.set(GameState::Endgame);
     }
 }
 
@@ -432,19 +426,18 @@ pub fn endgame_init(
                     color: text_color,
                 },
             }],
-            alignment: TextAlignment {
-                vertical: VerticalAlign::Top,
-                horizontal: HorizontalAlign::Center,
-            },
+            alignment: TextAlignment::Center,
+            ..default()
         },
         transform: Transform {
             translation: Vec3 {
+                x: 0.,
+                y: 0.,
                 z: 1.,
-                ..Default::default()
             },
-            ..Default::default()
+            ..default()
         },
-        ..Default::default()
+        ..default()
     });
     
     c.spawn(ButtonBundle {
@@ -453,7 +446,7 @@ pub fn endgame_init(
             margin: UiRect::all(Val::Auto),
             justify_content: JustifyContent::Center,
             align_items: AlignItems::Center,
-            ..Default::default()
+            ..default()
         },
         background_color: BackgroundColor::from(Color::rgb(0.6, 0.6, 0.6)),
         transform: Transform {
@@ -462,9 +455,9 @@ pub fn endgame_init(
                 y: 0.,
                 z: 1.
             },
-            ..Default::default()
+            ..default()
         },
-        ..Default::default()
+        ..default()
     })
     .with_children(|parent| {
         parent.spawn(TextBundle::from_section(
@@ -479,10 +472,10 @@ pub fn endgame_init(
 }
 
 pub fn endgame(
-    windows: Res<Windows>,
+    window_query: Query<&Window, With<PrimaryWindow>>,
     ms_info: Res<MSInfo>,
     mut c: Commands,
-    mut state: ResMut<State<GameState>>,
+    mut state: ResMut<NextState<GameState>>,
     mut text_query: Query<(&Text, &mut Transform), Without<Button>>,
     mut clicked: Local<bool>,
     mut pressed: Local<bool>,
@@ -497,7 +490,11 @@ pub fn endgame(
     button_entity_query: Query<Entity, With<Button>>,
     text_entity_query: Query<Entity, With<Text>>,
 ) {
-    let window = windows.get_primary().unwrap();
+
+    let Ok(window) = window_query.get_single() else {
+        return;
+    };
+
     let (w, h) = (window.width(), window.height());
 
     let grid_max = max(ms_info.width, ms_info.height) as f32;
@@ -526,7 +523,7 @@ pub fn endgame(
                 ty,
                 0.0
                 ),
-            ..Default::default()
+            ..default()
         };
         *t = trans;
         s.custom_size = size_vec;
@@ -540,7 +537,7 @@ pub fn endgame(
                 y: h/2. - 100.,
                 z: 1.
             },
-            ..Default::default()
+            ..default()
         }
     }
 
@@ -576,6 +573,6 @@ pub fn endgame(
             c.entity(e).despawn();
         }
 
-        state.overwrite_set(GameState::Intro).unwrap();
+        state.set(GameState::Intro);
     }
 }
