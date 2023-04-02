@@ -5,7 +5,10 @@ pub use bevy::{
 };
 
 use bevy::{
-    sprite::collide_aabb::{collide, Collision},
+    sprite::{
+        collide_aabb::{collide, Collision},
+        Anchor,
+    },
     window::PrimaryWindow,
 };
 
@@ -91,17 +94,17 @@ pub fn init(
                     color: Color::rgb(0.9, 0.9, 0.9),
                 },
             }],
-            alignment: TextAlignment::Center,
             ..default()
         },
         transform: Transform {
             translation: Vec3 {
-                x: 0.,
+                x: -225.,
                 y: 225.,
                 z: 1.,
             },
             ..default()
         },
+        text_anchor: Anchor::TopLeft,
         ..default()
     });
 
@@ -116,17 +119,17 @@ pub fn init(
                     color: Color::rgb(0.9, 0.9, 0.9),
                 },
             }],
-            alignment: TextAlignment::Center,
             ..default()
         },
         transform: Transform {
             translation: Vec3 {
-                x: 0.,
+                x: -225.,
                 y: 175.,
                 z: 1.,
             },
             ..default()
         },
+        text_anchor: Anchor::TopLeft,
         ..default()
     })
     .insert(InputText);
